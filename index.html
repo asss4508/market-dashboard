@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>국내 증시 · 매크로 대시보드</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head>
+<body>
+<header>
+  <h1>국내 증시 · 매크로 대시보드</h1>
+  <p>매일 장 마감 후 자동 갱신됩니다 &middot; <span id="last-updated" class="status">불러오는 중…</span></p>
+</header>
+
+<main>
+  <section class="card" id="card-index">
+    <div class="card-header">
+      <h2 class="card-title">코스피 / 코스닥 지수</h2>
+      <span class="card-sub">일별 종가</span>
+    </div>
+    <div class="toggles">
+      <label><input type="checkbox" data-target="index-kospi" checked><span class="dot s1"></span>코스피</label>
+      <label><input type="checkbox" data-target="index-kosdaq" checked><span class="dot s2"></span>코스닥</label>
+    </div>
+    <div class="chart-wrap"><canvas id="chart-index"></canvas></div>
+  </section>
+
+  <section class="card" id="card-margin">
+    <div class="card-header">
+      <h2 class="card-title">신용거래융자 잔고</h2>
+      <span class="card-sub">단위: 조원 &middot; 코스피 / 코스닥</span>
+    </div>
+    <div class="toggles">
+      <label><input type="checkbox" data-target="margin-kospi" checked><span class="dot s1"></span>코스피 융자</label>
+      <label><input type="checkbox" data-target="margin-kosdaq" checked><span class="dot s2"></span>코스닥 융자</label>
+    </div>
+    <div class="chart-wrap"><canvas id="chart-margin"></canvas></div>
+  </section>
+
+  <section class="card" id="card-deposit">
+    <div class="card-header">
+      <h2 class="card-title">투자자예탁금 추이</h2>
+      <span class="card-sub">단위: 조원 &middot; 코스피지수 비교</span>
+    </div>
+    <div class="chart-wrap"><canvas id="chart-deposit"></canvas></div>
+  </section>
+
+  <section class="card" id="card-flow">
+    <div class="card-header">
+      <h2 class="card-title">투자자별 매매동향</h2>
+      <span class="card-sub">단위: 억원 &middot; 순매수 누적</span>
+    </div>
+    <div class="toggles">
+      <label><input type="checkbox" data-target="flow-inst" checked><span class="dot s1"></span>기관</label>
+      <label><input type="checkbox" data-target="flow-foreign" checked><span class="dot s2"></span>외국인</label>
+      <label><input type="checkbox" data-target="flow-individual" checked><span class="dot s3"></span>개인</label>
+    </div>
+    <div class="chart-wrap"><canvas id="chart-flow"></canvas></div>
+  </section>
+
+  <section class="card" id="card-us10y">
+    <div class="card-header">
+      <h2 class="card-title">미국 10년물 국채금리</h2>
+      <span class="card-sub">단위: %</span>
+    </div>
+    <div class="chart-wrap"><canvas id="chart-us10y"></canvas></div>
+  </section>
+
+  <section class="card" id="card-fx">
+    <div class="card-header">
+      <h2 class="card-title">주요 환율</h2>
+      <span class="card-sub">원화 기준</span>
+    </div>
+    <div class="toggles">
+      <label><input type="checkbox" data-target="fx-usd" checked><span class="dot s1"></span>달러</label>
+      <label><input type="checkbox" data-target="fx-jpy" checked><span class="dot s2"></span>엔(100)</label>
+      <label><input type="checkbox" data-target="fx-eur"><span class="dot s3"></span>유로</label>
+      <label><input type="checkbox" data-target="fx-cny"><span class="dot s4"></span>위안</label>
+    </div>
+    <div class="chart-wrap"><canvas id="chart-fx"></canvas></div>
+  </section>
+</main>
+
+<footer>
+  데이터 출처: KRX 정보데이터시스템, 한국은행 ECOS, 금융투자협회, FRED
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
