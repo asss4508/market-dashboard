@@ -142,6 +142,12 @@ function renderStat(prefix, rows, field, opts = {}) {
   deltaEl.className = `stat-delta ${dir}`;
 }
 
+function renderAsOf(prefix, rows) {
+  const el = document.getElementById(`${prefix}-asof`);
+  if (!el || !rows.length) return;
+  el.textContent = `${rows[rows.length - 1].date.slice(2)} 기준`;
+}
+
 async function renderKospiKosdaqCharts() {
   const rows = await loadJSON("data/kospi_kosdaq.json");
   if (!rows.length) {
@@ -178,6 +184,7 @@ async function renderMarginChart() {
   const rows = await loadJSON("data/margin_balance.json");
   if (!rows.length) return emptyState("chart-margin", "데이터 준비 중입니다");
   trackLatest(rows);
+  renderAsOf("margin", rows);
   renderStat("margin-kospi", rows, "kospi_margin", { unit: "조원" });
   renderStat("margin-kosdaq", rows, "kosdaq_margin", { unit: "조원" });
   const chart = new Chart(document.getElementById("chart-margin"), {
@@ -198,6 +205,7 @@ async function renderDepositChart() {
   const rows = await loadJSON("data/investor_deposit.json");
   if (!rows.length) return emptyState("chart-deposit", "데이터 준비 중입니다");
   trackLatest(rows);
+  renderAsOf("deposit", rows);
   renderStat("deposit", rows, "deposit", { unit: "조원" });
   const chart = new Chart(document.getElementById("chart-deposit"), {
     type: "line",

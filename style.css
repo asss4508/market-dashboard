@@ -110,6 +110,11 @@ main {
   color: var(--muted);
 }
 
+.stat-asof {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
 .stat-item {
   display: flex;
   align-items: baseline;
