@@ -61,7 +61,15 @@ function baseOptions(extra = {}) {
     scales: {
       x: {
         grid: { display: false },
-        ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+        ticks: {
+          maxRotation: 0,
+          autoSkip: true,
+          maxTicksLimit: 8,
+          callback: function (value) {
+            const label = this.getLabelForValue(value);
+            return typeof label === "string" ? label.slice(2, 7) : label;
+          },
+        },
       },
       y: {
         grid: { color: color("--grid") },
@@ -121,10 +129,15 @@ function renderStat(prefix, rows, field, opts = {}) {
   if (valid.length < 2) return;
   const prev = valid[valid.length - 2][field];
   const diff = last - prev;
+  if (diff === 0) {
+    deltaEl.textContent = "보합";
+    deltaEl.className = "stat-delta flat";
+    return;
+  }
   const pct = (diff / prev) * 100;
-  const dir = diff > 0 ? "up" : diff < 0 ? "down" : "flat";
-  const arrow = diff > 0 ? "▲" : diff < 0 ? "▼" : "–";
-  const pctPart = showPct ? ` (${diff >= 0 ? "+" : ""}${pct.toFixed(2)}%)` : "";
+  const dir = diff > 0 ? "up" : "down";
+  const arrow = diff > 0 ? "▲" : "▼";
+  const pctPart = showPct ? ` (${diff > 0 ? "+" : ""}${pct.toFixed(2)}%)` : "";
   deltaEl.textContent = `${arrow} ${Math.abs(diff).toLocaleString("ko-KR", { maximumFractionDigits: 2 })}${deltaUnit}${pctPart}`;
   deltaEl.className = `stat-delta ${dir}`;
 }
