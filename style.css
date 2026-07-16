@@ -40,7 +40,15 @@
     --series-6: #e66767;
     --series-7: #d55181;
     --series-8: #d95926;
+
+    --delta-up: #0ca30c;
+    --delta-down: #d03b3b;
   }
+}
+
+:root {
+  --delta-up: #006300;
+  --delta-down: #d03b3b;
 }
 
 * {
@@ -103,6 +111,28 @@ main {
   color: var(--muted);
 }
 
+.stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 2px 0 10px;
+}
+
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.stat-delta {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.stat-delta.up { color: var(--delta-up); }
+.stat-delta.down { color: var(--delta-down); }
+.stat-delta.flat { color: var(--muted); }
+
 .toggles {
   display: flex;
   gap: 14px;
@@ -163,4 +193,69 @@ footer {
 .status {
   font-size: 0.72rem;
   color: var(--muted);
+}
+
+.card-title {
+  cursor: pointer;
+}
+
+.card-title:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--axis);
+}
+
+.modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 100;
+}
+
+.modal-backdrop.open {
+  display: flex;
+}
+
+.modal-dialog {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  width: min(900px, 100%);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.modal-header .card-title {
+  cursor: default;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.modal-close:hover {
+  color: var(--text);
+}
+
+.modal-chart-wrap {
+  position: relative;
+  height: min(60vh, 520px);
 }

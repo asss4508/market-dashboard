@@ -107,22 +107,61 @@ function trackLatest(rows) {
   if (!latestDate || d > latestDate) latestDate = d;
 }
 
-async function renderIndexChart() {
+const chartRegistry = {};
+function registerChart(key, chart, title) {
+  chartRegistry[key] = { chart, title };
+}
+
+function renderStat(prefix, rows, field) {
+  const valid = rows.filter((r) => typeof r[field] === "number");
+  const valueEl = document.getElementById(`${prefix}-value`);
+  const deltaEl = document.getElementById(`${prefix}-delta`);
+  if (valid.length === 0) {
+    valueEl.textContent = "데이터 없음";
+    return;
+  }
+  const last = valid[valid.length - 1][field];
+  valueEl.textContent = last.toLocaleString("ko-KR", { maximumFractionDigits: 2 });
+  if (valid.length < 2) return;
+  const prev = valid[valid.length - 2][field];
+  const diff = last - prev;
+  const pct = (diff / prev) * 100;
+  const dir = diff > 0 ? "up" : diff < 0 ? "down" : "flat";
+  const arrow = diff > 0 ? "▲" : diff < 0 ? "▼" : "–";
+  deltaEl.textContent = `${arrow} ${Math.abs(diff).toLocaleString("ko-KR", { maximumFractionDigits: 2 })} (${diff >= 0 ? "+" : ""}${pct.toFixed(2)}%)`;
+  deltaEl.className = `stat-delta ${dir}`;
+}
+
+async function renderKospiKosdaqCharts() {
   const rows = await loadJSON("data/kospi_kosdaq.json");
-  if (!rows.length) return emptyState("chart-index", "데이터 준비 중입니다");
+  if (!rows.length) {
+    emptyState("chart-kospi", "데이터 준비 중입니다");
+    emptyState("chart-kosdaq", "데이터 준비 중입니다");
+    return;
+  }
   trackLatest(rows);
-  const chart = new Chart(document.getElementById("chart-index"), {
+  renderStat("kospi", rows, "kospi");
+  renderStat("kosdaq", rows, "kosdaq");
+
+  const kospiChart = new Chart(document.getElementById("chart-kospi"), {
     type: "line",
     data: {
       labels: rows.map((r) => r.date),
-      datasets: [
-        baseLineDataset("코스피", rows.map((r) => r.kospi), palette[1]()),
-        baseLineDataset("코스닥", rows.map((r) => r.kosdaq), palette[2]()),
-      ],
+      datasets: [baseLineDataset("코스피", rows.map((r) => r.kospi), palette[1]())],
     },
     options: baseOptions(),
   });
-  wireToggles("card-index", chart, { "index-kospi": 0, "index-kosdaq": 1 });
+  registerChart("kospi", kospiChart, "코스피");
+
+  const kosdaqChart = new Chart(document.getElementById("chart-kosdaq"), {
+    type: "line",
+    data: {
+      labels: rows.map((r) => r.date),
+      datasets: [baseLineDataset("코스닥", rows.map((r) => r.kosdaq), palette[2]())],
+    },
+    options: baseOptions(),
+  });
+  registerChart("kosdaq", kosdaqChart, "코스닥");
 }
 
 async function renderMarginChart() {
@@ -141,6 +180,7 @@ async function renderMarginChart() {
     options: baseOptions(),
   });
   wireToggles("card-margin", chart, { "margin-kospi": 0, "margin-kosdaq": 1 });
+  registerChart("margin", chart, "신용거래융자 잔고");
 }
 
 // 코스피지수와 예탁금은 단위가 달라 동일 축에 놓을 수 없으므로,
@@ -167,7 +207,7 @@ async function renderDepositChart() {
     { color: palette[1](), label: "코스피지수 (2018.01=100)" },
     { color: palette[4](), label: "투자자예탁금 (2018.01=100)" },
   ]);
-  new Chart(document.getElementById("chart-deposit"), {
+  const chart = new Chart(document.getElementById("chart-deposit"), {
     type: "line",
     data: {
       labels: rows.map((r) => r.date),
@@ -178,6 +218,7 @@ async function renderDepositChart() {
     },
     options: baseOptions(),
   });
+  registerChart("deposit", chart, "투자자예탁금 추이");
 }
 
 async function renderFlowChart() {
@@ -197,13 +238,14 @@ async function renderFlowChart() {
     options: baseOptions(),
   });
   wireToggles("card-flow", chart, { "flow-inst": 0, "flow-foreign": 1, "flow-individual": 2 });
+  registerChart("flow", chart, "투자자별 매매동향");
 }
 
 async function renderUs10yChart() {
   const rows = await loadJSON("data/us10y.json");
   if (!rows.length) return emptyState("chart-us10y", "데이터 준비 중입니다");
   trackLatest(rows);
-  new Chart(document.getElementById("chart-us10y"), {
+  const chart = new Chart(document.getElementById("chart-us10y"), {
     type: "line",
     data: {
       labels: rows.map((r) => r.date),
@@ -211,6 +253,7 @@ async function renderUs10yChart() {
     },
     options: baseOptions(),
   });
+  registerChart("us10y", chart, "미국 10년물 국채금리");
 }
 
 async function renderFxChart() {
@@ -236,11 +279,62 @@ async function renderFxChart() {
   meta3.hidden = true;
   chart.update();
   wireToggles("card-fx", chart, { "fx-usd": 0, "fx-jpy": 1, "fx-eur": 2, "fx-cny": 3 });
+  registerChart("fx", chart, "주요 환율");
+}
+
+let modalChart = null;
+function openChartModal(key) {
+  const entry = chartRegistry[key];
+  if (!entry) return;
+  const { chart, title } = entry;
+  document.getElementById("modal-title").textContent = title;
+  document.getElementById("chart-modal").classList.add("open");
+
+  if (modalChart) modalChart.destroy();
+  const datasets = chart.data.datasets.map((ds, i) => ({
+    ...ds,
+    hidden: chart.getDatasetMeta(i).hidden || false,
+  }));
+  modalChart = new Chart(document.getElementById("modal-canvas"), {
+    type: chart.config.type,
+    data: { labels: chart.data.labels, datasets },
+    options: baseOptions({
+      plugins: {
+        legend: { display: false },
+        tooltip: baseOptions().plugins.tooltip,
+      },
+    }),
+  });
+}
+
+function closeChartModal() {
+  document.getElementById("chart-modal").classList.remove("open");
+  if (modalChart) {
+    modalChart.destroy();
+    modalChart = null;
+  }
+}
+
+function wireModal() {
+  document.querySelectorAll("main .card[data-chart-key] .card-title").forEach((el) => {
+    el.addEventListener("click", () => {
+      const key = el.closest(".card").dataset.chartKey;
+      openChartModal(key);
+    });
+  });
+  document.getElementById("modal-close").addEventListener("click", closeChartModal);
+  document.getElementById("chart-modal").addEventListener("click", (e) => {
+    if (e.target.id === "chart-modal") closeChartModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeChartModal();
+  });
 }
 
 async function main() {
+  wireModal();
   await Promise.all([
-    renderIndexChart(),
+    renderKospiKosdaqCharts(),
     renderMarginChart(),
     renderDepositChart(),
     renderFlowChart(),

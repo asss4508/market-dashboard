@@ -99,7 +99,10 @@ def ecos_item_list(stat_code, api_key):
     r = requests.get(url, timeout=20)
     r.raise_for_status()
     data = r.json()
-    return data.get("StatisticItemList", {}).get("row", [])
+    result = data.get("StatisticItemList")
+    if not result:
+        raise RuntimeError(f"ECOS StatisticItemList error: {data}")
+    return result.get("row", [])
 
 
 def ecos_series(stat_code, item_code, start, end, api_key, cycle="D"):
@@ -110,7 +113,10 @@ def ecos_series(stat_code, item_code, start, end, api_key, cycle="D"):
     r = requests.get(url, timeout=20)
     r.raise_for_status()
     data = r.json()
-    return data.get("StatisticSearch", {}).get("row", [])
+    result = data.get("StatisticSearch")
+    if not result:
+        raise RuntimeError(f"ECOS StatisticSearch error: {data}")
+    return result.get("row", [])
 
 
 def collect_fx(start, end):
@@ -122,13 +128,13 @@ def collect_fx(start, end):
 
     stat_code = "731Y001"
     items = ecos_item_list(stat_code, api_key)
-    name_to_code = {it["ITEM_NAME1"]: it["ITEM_CODE1"] for it in items}
+    name_to_code = {it["ITEM_NAME"]: it["ITEM_CODE"] for it in items}
 
     wanted = {
-        "usd_krw": "미국 달러",
-        "jpy_krw": "일본 옌(100)",
+        "usd_krw": "미국달러",
+        "jpy_krw": "일본엔",
         "eur_krw": "유로",
-        "cny_krw": "중국 위안",
+        "cny_krw": "위안",
     }
     series_by_key = {}
     for key, name_hint in wanted.items():
@@ -151,19 +157,69 @@ def collect_fx(start, end):
     upsert_json("fx.json", fx_rows)
 
 
-def collect_margin_and_deposit(start, end):
-    """신용거래융자 잔고, 투자자예탁금 - 금융투자협회(KOFIA) 종합통계.
+KOFIA_BASE = "http://apis.data.go.kr/1160100/service/GetKofiaStatisticsInfoService"
 
-    TODO: data.go.kr에서 '금융위원회_금융투자협회종합통계정보' 활용신청 승인 후
-    제공되는 실제 오퍼레이션명/응답 스키마를 확인해 아래 요청 URL과 필드 매핑을 확정할 것.
-    조사 결과 후보 오퍼레이션: 신용공여잔고추이(STATSCU0100000070), 증시자금추이(STATSCU0100000060)
-    (freesis.kofia.or.kr 화면 기준 serviceId, data.go.kr 오퍼레이션명은 다를 수 있음)
-    """
+
+def kofia_fetch(operation, api_key):
+    """전체 기간이 ~1200건 내외로 크지 않아, 건수 확인 후 한 번에 전체를 가져온다."""
+    url = f"{KOFIA_BASE}/{operation}"
+    probe = requests.get(
+        url, params={"serviceKey": api_key, "numOfRows": 1, "pageNo": 1, "resultType": "json"},
+        timeout=30,
+    )
+    probe.raise_for_status()
+    total = probe.json()["response"]["body"]["totalCount"]
+
+    r = requests.get(
+        url, params={"serviceKey": api_key, "numOfRows": total, "pageNo": 1, "resultType": "json"},
+        timeout=30,
+    )
+    r.raise_for_status()
+    item = r.json()["response"]["body"]["items"].get("item", [])
+    if isinstance(item, dict):
+        item = [item]
+    return item
+
+
+def to_iso_date(bas_dt):
+    return f"{bas_dt[0:4]}-{bas_dt[4:6]}-{bas_dt[6:8]}"
+
+
+def collect_margin_and_deposit(start, end):
+    """신용거래융자 잔고, 투자자예탁금 - 금융투자협회(KOFIA) 종합통계 (공공데이터포털 경유)."""
     api_key = os.environ.get("DATA_GO_KR_API_KEY")
     if not api_key:
         print("[margin/deposit] DATA_GO_KR_API_KEY 미설정, 건너뜀")
         return
-    print("[margin/deposit] TODO: data.go.kr 활용신청 승인 후 실제 응답 구조로 구현 예정")
+
+    credit_items = kofia_fetch("getGrantingOfCreditBalanceInfo", api_key)
+    margin_rows = [
+        {
+            "date": to_iso_date(it["basDt"]),
+            "kospi_margin": round(float(it["crdTrFingScrs"]) / 1e12, 2),
+            "kosdaq_margin": round(float(it["crdTrFingKosdaq"]) / 1e12, 2),
+        }
+        for it in credit_items
+    ]
+    upsert_json("margin_balance.json", margin_rows)
+
+    kospi_by_date = {}
+    kospi_path = os.path.join(DATA_DIR, "kospi_kosdaq.json")
+    if os.path.exists(kospi_path):
+        with open(kospi_path, "r", encoding="utf-8") as f:
+            for row in json.load(f):
+                if "kospi" in row:
+                    kospi_by_date[row["date"]] = row["kospi"]
+
+    fund_items = kofia_fetch("getSecuritiesMarketTotalCapitalInfo", api_key)
+    deposit_rows = []
+    for it in fund_items:
+        date_str = to_iso_date(it["basDt"])
+        row = {"date": date_str, "deposit": round(float(it["invrDpsgAmt"]) / 1e12, 2)}
+        if date_str in kospi_by_date:
+            row["kospi"] = kospi_by_date[date_str]
+        deposit_rows.append(row)
+    upsert_json("investor_deposit.json", deposit_rows)
 
 
 def main():
