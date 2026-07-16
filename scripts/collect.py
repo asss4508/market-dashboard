@@ -15,6 +15,7 @@ import sys
 
 import pandas as pd
 import requests
+from requests.adapters import HTTPAdapter, Retry
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout.reconfigure(encoding="utf-8")
@@ -24,6 +25,17 @@ DATA_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "data"))
 
 FRED_US10Y_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10"
 ECOS_BASE = "https://ecos.bok.or.kr/api"
+
+# 일부 국내 공공/금융 API가 기본 requests User-Agent를 막거나 응답이 느려서,
+# 브라우저형 UA + 재시도(backoff)를 붙인 공용 세션을 쓴다.
+session = requests.Session()
+session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+})
+retry = Retry(total=3, backoff_factor=2, status_forcelist=[429, 500, 502, 503, 504])
+session.mount("https://", HTTPAdapter(max_retries=retry))
+session.mount("http://", HTTPAdapter(max_retries=retry))
+REQUEST_TIMEOUT = 30
 
 
 def upsert_json(filename, new_rows):
@@ -82,7 +94,7 @@ def collect_index_and_flow(start, end):
 
 def collect_us10y():
     """미국 10년물 국채금리 - FRED (키 불필요)"""
-    r = requests.get(FRED_US10Y_URL, timeout=20)
+    r = session.get(FRED_US10Y_URL, timeout=REQUEST_TIMEOUT)
     r.raise_for_status()
     rows = []
     for line in r.text.strip().splitlines()[1:]:
@@ -96,7 +108,7 @@ def collect_us10y():
 
 def ecos_item_list(stat_code, api_key):
     url = f"{ECOS_BASE}/StatisticItemList/{api_key}/json/kr/1/100/{stat_code}"
-    r = requests.get(url, timeout=20)
+    r = session.get(url, timeout=REQUEST_TIMEOUT)
     r.raise_for_status()
     data = r.json()
     result = data.get("StatisticItemList")
@@ -110,7 +122,7 @@ def ecos_series(stat_code, item_code, start, end, api_key, cycle="D"):
         f"{ECOS_BASE}/StatisticSearch/{api_key}/json/kr/1/10000/"
         f"{stat_code}/{cycle}/{start}/{end}/{item_code}"
     )
-    r = requests.get(url, timeout=20)
+    r = session.get(url, timeout=REQUEST_TIMEOUT)
     r.raise_for_status()
     data = r.json()
     result = data.get("StatisticSearch")
@@ -163,16 +175,16 @@ KOFIA_BASE = "http://apis.data.go.kr/1160100/service/GetKofiaStatisticsInfoServi
 def kofia_fetch(operation, api_key):
     """전체 기간이 ~1200건 내외로 크지 않아, 건수 확인 후 한 번에 전체를 가져온다."""
     url = f"{KOFIA_BASE}/{operation}"
-    probe = requests.get(
+    probe = session.get(
         url, params={"serviceKey": api_key, "numOfRows": 1, "pageNo": 1, "resultType": "json"},
-        timeout=30,
+        timeout=REQUEST_TIMEOUT,
     )
     probe.raise_for_status()
     total = probe.json()["response"]["body"]["totalCount"]
 
-    r = requests.get(
+    r = session.get(
         url, params={"serviceKey": api_key, "numOfRows": total, "pageNo": 1, "resultType": "json"},
-        timeout=30,
+        timeout=REQUEST_TIMEOUT,
     )
     r.raise_for_status()
     item = r.json()["response"]["body"]["items"].get("item", [])
@@ -230,15 +242,24 @@ def main():
     start_s, end_s = start.strftime("%Y%m%d"), end.strftime("%Y%m%d")
     print(f"수집 범위: {start_s} ~ {end_s} (backfill={backfill})")
 
-    collect_us10y()
-
+    tasks = [("us10y", lambda: collect_us10y())]
     if os.environ.get("KRX_ID") and os.environ.get("KRX_PW"):
-        collect_index_and_flow(start_s, end_s)
+        tasks.append(("index/flow", lambda: collect_index_and_flow(start_s, end_s)))
     else:
         print("[index/flow] KRX_ID/KRX_PW 미설정, 건너뜀")
+    tasks.append(("fx", lambda: collect_fx(start_s, end_s)))
+    tasks.append(("margin/deposit", lambda: collect_margin_and_deposit(start_s, end_s)))
 
-    collect_fx(start_s, end_s)
-    collect_margin_and_deposit(start_s, end_s)
+    failed = []
+    for name, task in tasks:
+        try:
+            task()
+        except Exception as e:
+            print(f"[{name}] 수집 실패, 다른 소스는 계속 진행: {e}")
+            failed.append(name)
+
+    if failed:
+        print(f"실패한 소스: {', '.join(failed)} (다음 실행에서 재시도됨)")
 
 
 if __name__ == "__main__":
