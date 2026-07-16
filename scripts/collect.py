@@ -198,7 +198,7 @@ def to_iso_date(bas_dt):
 
 
 def collect_margin_and_deposit(start, end):
-    """신용거래융자 잔고, 투자자예탁금 - 금융투자협회(KOFIA) 종합통계 (공공데이터포털 경유)."""
+    """신용거래융자 잔고, 투자자예탁금, 반대매매금액 - 금융투자협회(KOFIA) 종합통계 (공공데이터포털 경유)."""
     api_key = os.environ.get("DATA_GO_KR_API_KEY")
     if not api_key:
         print("[margin/deposit] DATA_GO_KR_API_KEY 미설정, 건너뜀")
@@ -215,23 +215,18 @@ def collect_margin_and_deposit(start, end):
     ]
     upsert_json("margin_balance.json", margin_rows)
 
-    kospi_by_date = {}
-    kospi_path = os.path.join(DATA_DIR, "kospi_kosdaq.json")
-    if os.path.exists(kospi_path):
-        with open(kospi_path, "r", encoding="utf-8") as f:
-            for row in json.load(f):
-                if "kospi" in row:
-                    kospi_by_date[row["date"]] = row["kospi"]
-
     fund_items = kofia_fetch("getSecuritiesMarketTotalCapitalInfo", api_key)
     deposit_rows = []
+    reverse_trade_rows = []
     for it in fund_items:
         date_str = to_iso_date(it["basDt"])
-        row = {"date": date_str, "deposit": round(float(it["invrDpsgAmt"]) / 1e12, 2)}
-        if date_str in kospi_by_date:
-            row["kospi"] = kospi_by_date[date_str]
-        deposit_rows.append(row)
+        deposit_rows.append({"date": date_str, "deposit": round(float(it["invrDpsgAmt"]) / 1e12, 2)})
+        reverse_trade_rows.append({
+            "date": date_str,
+            "amount": round(float(it["brkTrdUcolMnyVsOppsTrdAmt"]) / 1e8, 1),  # 억원 단위
+        })
     upsert_json("investor_deposit.json", deposit_rows)
+    upsert_json("reverse_trade.json", reverse_trade_rows)
 
 
 def main():

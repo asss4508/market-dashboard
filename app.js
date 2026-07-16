@@ -218,6 +218,25 @@ async function renderDepositChart() {
   registerChart("deposit", chart, "투자자예탁금 추이");
 }
 
+async function renderReverseChart() {
+  const rows = await loadJSON("data/reverse_trade.json");
+  if (!rows.length) return emptyState("chart-reverse", "데이터 준비 중입니다");
+  trackLatest(rows);
+  const cutoff = lastYearCutoff();
+  const recent = rows.filter((r) => r.date >= cutoff);
+  renderAsOf("reverse", recent);
+  renderStat("reverse", recent, "amount", { unit: "억원" });
+  const chart = new Chart(document.getElementById("chart-reverse"), {
+    type: "line",
+    data: {
+      labels: recent.map((r) => r.date),
+      datasets: [baseLineDataset("반대매매금액", recent.map((r) => r.amount), palette[6]())],
+    },
+    options: baseOptions(),
+  });
+  registerChart("reverse", chart, "일별 반대매매 금액");
+}
+
 function cumulativeSum(values) {
   let sum = 0;
   return values.map((v) => {
@@ -226,14 +245,18 @@ function cumulativeSum(values) {
   });
 }
 
+function lastYearCutoff() {
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  return oneYearAgo.toISOString().slice(0, 10);
+}
+
 async function renderFlowChart() {
   const rows = await loadJSON("data/investor_flow.json");
   if (!rows.length) return emptyState("chart-flow", "데이터 준비 중입니다");
   trackLatest(rows);
 
-  const oneYearAgo = new Date();
-  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-  const cutoff = oneYearAgo.toISOString().slice(0, 10);
+  const cutoff = lastYearCutoff();
   const recent = rows.filter((r) => r.date >= cutoff);
 
   const chart = new Chart(document.getElementById("chart-flow"), {
@@ -339,6 +362,7 @@ async function main() {
     renderKospiKosdaqCharts(),
     renderMarginChart(),
     renderDepositChart(),
+    renderReverseChart(),
     renderFlowChart(),
     renderUs10yChart(),
     renderFxChart(),

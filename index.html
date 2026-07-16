@@ -51,13 +51,27 @@
   </section>
 
   <section class="card" id="card-deposit" data-chart-key="deposit">
-    <div class="card-header">
+    <div class="card-header card-header--split">
       <h2 class="card-title">투자자예탁금 추이</h2>
       <span class="stat-asof" id="deposit-asof"></span>
+    </div>
+    <div class="stat-row">
       <span class="stat-value" id="deposit-value">–</span>
       <span class="stat-delta" id="deposit-delta"></span>
     </div>
     <div class="chart-wrap"><canvas id="chart-deposit"></canvas></div>
+  </section>
+
+  <section class="card" id="card-reverse" data-chart-key="reverse">
+    <div class="card-header card-header--split">
+      <h2 class="card-title">일별 반대매매 금액</h2>
+      <span class="stat-asof" id="reverse-asof"></span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-value" id="reverse-value">–</span>
+      <span class="stat-delta" id="reverse-delta"></span>
+    </div>
+    <div class="chart-wrap"><canvas id="chart-reverse"></canvas></div>
   </section>
 
   <section class="card" id="card-flow" data-chart-key="flow">
