@@ -73,12 +73,6 @@ function baseOptions(extra = {}) {
   };
 }
 
-function renderLegend(el, items) {
-  el.innerHTML = items
-    .map((it) => `<span><span class="dot" style="background:${it.color}"></span>${it.label}</span>`)
-    .join("");
-}
-
 function emptyState(canvasId, message) {
   const canvas = document.getElementById(canvasId);
   const ctx = canvas.getContext("2d");
@@ -112,23 +106,26 @@ function registerChart(key, chart, title) {
   chartRegistry[key] = { chart, title };
 }
 
-function renderStat(prefix, rows, field) {
+function renderStat(prefix, rows, field, opts = {}) {
+  const { unit = "", deltaUnit = unit, showPct = true } = opts;
   const valid = rows.filter((r) => typeof r[field] === "number");
   const valueEl = document.getElementById(`${prefix}-value`);
   const deltaEl = document.getElementById(`${prefix}-delta`);
+  if (!valueEl || !deltaEl) return;
   if (valid.length === 0) {
     valueEl.textContent = "데이터 없음";
     return;
   }
   const last = valid[valid.length - 1][field];
-  valueEl.textContent = last.toLocaleString("ko-KR", { maximumFractionDigits: 2 });
+  valueEl.textContent = `${last.toLocaleString("ko-KR", { maximumFractionDigits: 2 })}${unit}`;
   if (valid.length < 2) return;
   const prev = valid[valid.length - 2][field];
   const diff = last - prev;
   const pct = (diff / prev) * 100;
   const dir = diff > 0 ? "up" : diff < 0 ? "down" : "flat";
   const arrow = diff > 0 ? "▲" : diff < 0 ? "▼" : "–";
-  deltaEl.textContent = `${arrow} ${Math.abs(diff).toLocaleString("ko-KR", { maximumFractionDigits: 2 })} (${diff >= 0 ? "+" : ""}${pct.toFixed(2)}%)`;
+  const pctPart = showPct ? ` (${diff >= 0 ? "+" : ""}${pct.toFixed(2)}%)` : "";
+  deltaEl.textContent = `${arrow} ${Math.abs(diff).toLocaleString("ko-KR", { maximumFractionDigits: 2 })}${deltaUnit}${pctPart}`;
   deltaEl.className = `stat-delta ${dir}`;
 }
 
@@ -168,6 +165,8 @@ async function renderMarginChart() {
   const rows = await loadJSON("data/margin_balance.json");
   if (!rows.length) return emptyState("chart-margin", "데이터 준비 중입니다");
   trackLatest(rows);
+  renderStat("margin-kospi", rows, "kospi_margin", { unit: "조원" });
+  renderStat("margin-kosdaq", rows, "kosdaq_margin", { unit: "조원" });
   const chart = new Chart(document.getElementById("chart-margin"), {
     type: "line",
     data: {
@@ -179,72 +178,64 @@ async function renderMarginChart() {
     },
     options: baseOptions(),
   });
-  wireToggles("card-margin", chart, { "margin-kospi": 0, "margin-kosdaq": 1 });
   registerChart("margin", chart, "신용거래융자 잔고");
-}
-
-// 코스피지수와 예탁금은 단위가 달라 동일 축에 놓을 수 없으므로,
-// 시작일을 100으로 맞춘 지수화 값으로 변환해 단일 축에 표시한다 (dual-axis 금지 규칙).
-function indexTo100(values) {
-  const base = values.find((v) => typeof v === "number" && !Number.isNaN(v));
-  if (!base) return values;
-  return values.map((v) => (typeof v === "number" ? (v / base) * 100 : null));
 }
 
 async function renderDepositChart() {
   const rows = await loadJSON("data/investor_deposit.json");
   if (!rows.length) return emptyState("chart-deposit", "데이터 준비 중입니다");
   trackLatest(rows);
-  const kospiIdx = indexTo100(rows.map((r) => r.kospi));
-  const depositIdx = indexTo100(rows.map((r) => r.deposit));
-  const legendEl = document.querySelector("#card-deposit .legend") || (() => {
-    const el = document.createElement("div");
-    el.className = "legend";
-    document.getElementById("chart-deposit").closest(".chart-wrap").before(el);
-    return el;
-  })();
-  renderLegend(legendEl, [
-    { color: palette[1](), label: "코스피지수 (2018.01=100)" },
-    { color: palette[4](), label: "투자자예탁금 (2018.01=100)" },
-  ]);
+  renderStat("deposit", rows, "deposit", { unit: "조원" });
   const chart = new Chart(document.getElementById("chart-deposit"), {
     type: "line",
     data: {
       labels: rows.map((r) => r.date),
-      datasets: [
-        baseLineDataset("코스피지수", kospiIdx, palette[1]()),
-        baseLineDataset("투자자예탁금", depositIdx, palette[4]()),
-      ],
+      datasets: [baseLineDataset("투자자예탁금", rows.map((r) => r.deposit), palette[4]())],
     },
     options: baseOptions(),
   });
   registerChart("deposit", chart, "투자자예탁금 추이");
 }
 
+function cumulativeSum(values) {
+  let sum = 0;
+  return values.map((v) => {
+    sum += v || 0;
+    return sum;
+  });
+}
+
 async function renderFlowChart() {
   const rows = await loadJSON("data/investor_flow.json");
   if (!rows.length) return emptyState("chart-flow", "데이터 준비 중입니다");
   trackLatest(rows);
+
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  const cutoff = oneYearAgo.toISOString().slice(0, 10);
+  const recent = rows.filter((r) => r.date >= cutoff);
+
   const chart = new Chart(document.getElementById("chart-flow"), {
     type: "line",
     data: {
-      labels: rows.map((r) => r.date),
+      labels: recent.map((r) => r.date),
       datasets: [
-        baseLineDataset("기관", rows.map((r) => r.institution_net), palette[1]()),
-        baseLineDataset("외국인", rows.map((r) => r.foreign_net), palette[2]()),
-        baseLineDataset("개인", rows.map((r) => r.individual_net), palette[3]()),
+        baseLineDataset("기관", cumulativeSum(recent.map((r) => r.institution_net)), palette[1]()),
+        baseLineDataset("외국인", cumulativeSum(recent.map((r) => r.foreign_net)), palette[2]()),
+        baseLineDataset("개인", cumulativeSum(recent.map((r) => r.individual_net)), palette[3]()),
       ],
     },
     options: baseOptions(),
   });
   wireToggles("card-flow", chart, { "flow-inst": 0, "flow-foreign": 1, "flow-individual": 2 });
-  registerChart("flow", chart, "투자자별 매매동향");
+  registerChart("flow", chart, "투자자별 매매동향 (최근 1년 누적)");
 }
 
 async function renderUs10yChart() {
   const rows = await loadJSON("data/us10y.json");
   if (!rows.length) return emptyState("chart-us10y", "데이터 준비 중입니다");
   trackLatest(rows);
+  renderStat("us10y", rows, "yield", { unit: "%", deltaUnit: "%p", showPct: false });
   const chart = new Chart(document.getElementById("chart-us10y"), {
     type: "line",
     data: {
@@ -260,26 +251,16 @@ async function renderFxChart() {
   const rows = await loadJSON("data/fx.json");
   if (!rows.length) return emptyState("chart-fx", "데이터 준비 중입니다");
   trackLatest(rows);
+  renderStat("fx-usd", rows, "usd_krw", { unit: "원" });
   const chart = new Chart(document.getElementById("chart-fx"), {
     type: "line",
     data: {
       labels: rows.map((r) => r.date),
-      datasets: [
-        baseLineDataset("달러", rows.map((r) => r.usd_krw), palette[1]()),
-        baseLineDataset("엔(100)", rows.map((r) => r.jpy_krw), palette[2]()),
-        baseLineDataset("유로", rows.map((r) => r.eur_krw), palette[3]()),
-        baseLineDataset("위안", rows.map((r) => r.cny_krw), palette[4]()),
-      ],
+      datasets: [baseLineDataset("달러", rows.map((r) => r.usd_krw), palette[1]())],
     },
     options: baseOptions(),
   });
-  const meta2 = chart.getDatasetMeta(2);
-  meta2.hidden = true;
-  const meta3 = chart.getDatasetMeta(3);
-  meta3.hidden = true;
-  chart.update();
-  wireToggles("card-fx", chart, { "fx-usd": 0, "fx-jpy": 1, "fx-eur": 2, "fx-cny": 3 });
-  registerChart("fx", chart, "주요 환율");
+  registerChart("fx", chart, "원/달러 환율");
 }
 
 let modalChart = null;

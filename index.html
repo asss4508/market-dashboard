@@ -41,11 +41,19 @@
   <section class="card" id="card-margin" data-chart-key="margin">
     <div class="card-header">
       <h2 class="card-title">신용거래융자 잔고</h2>
-      <span class="card-sub">단위: 조원 &middot; 코스피 / 코스닥</span>
+      <span class="card-sub">단위: 조원</span>
     </div>
-    <div class="toggles">
-      <label><input type="checkbox" data-target="margin-kospi" checked><span class="dot s1"></span>코스피 융자</label>
-      <label><input type="checkbox" data-target="margin-kosdaq" checked><span class="dot s2"></span>코스닥 융자</label>
+    <div class="stat-row">
+      <div class="stat-item">
+        <span class="stat-label"><span class="dot s1"></span>코스피</span>
+        <span class="stat-value" id="margin-kospi-value">–</span>
+        <span class="stat-delta" id="margin-kospi-delta"></span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label"><span class="dot s2"></span>코스닥</span>
+        <span class="stat-value" id="margin-kosdaq-value">–</span>
+        <span class="stat-delta" id="margin-kosdaq-delta"></span>
+      </div>
     </div>
     <div class="chart-wrap"><canvas id="chart-margin"></canvas></div>
   </section>
@@ -53,7 +61,11 @@
   <section class="card" id="card-deposit" data-chart-key="deposit">
     <div class="card-header">
       <h2 class="card-title">투자자예탁금 추이</h2>
-      <span class="card-sub">단위: 조원 &middot; 코스피지수 비교</span>
+      <span class="card-sub">단위: 조원</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-value" id="deposit-value">–</span>
+      <span class="stat-delta" id="deposit-delta"></span>
     </div>
     <div class="chart-wrap"><canvas id="chart-deposit"></canvas></div>
   </section>
@@ -61,7 +73,7 @@
   <section class="card" id="card-flow" data-chart-key="flow">
     <div class="card-header">
       <h2 class="card-title">투자자별 매매동향</h2>
-      <span class="card-sub">단위: 억원 &middot; 순매수 누적</span>
+      <span class="card-sub">단위: 억원 &middot; 최근 1년 누적 순매수</span>
     </div>
     <div class="toggles">
       <label><input type="checkbox" data-target="flow-inst" checked><span class="dot s1"></span>기관</label>
@@ -76,19 +88,21 @@
       <h2 class="card-title">미국 10년물 국채금리</h2>
       <span class="card-sub">단위: %</span>
     </div>
+    <div class="stat-row">
+      <span class="stat-value" id="us10y-value">–</span>
+      <span class="stat-delta" id="us10y-delta"></span>
+    </div>
     <div class="chart-wrap"><canvas id="chart-us10y"></canvas></div>
   </section>
 
   <section class="card" id="card-fx" data-chart-key="fx">
     <div class="card-header">
-      <h2 class="card-title">주요 환율</h2>
-      <span class="card-sub">원화 기준</span>
+      <h2 class="card-title">원/달러 환율</h2>
+      <span class="card-sub">단위: 원</span>
     </div>
-    <div class="toggles">
-      <label><input type="checkbox" data-target="fx-usd" checked><span class="dot s1"></span>달러</label>
-      <label><input type="checkbox" data-target="fx-jpy" checked><span class="dot s2"></span>엔(100)</label>
-      <label><input type="checkbox" data-target="fx-eur"><span class="dot s3"></span>유로</label>
-      <label><input type="checkbox" data-target="fx-cny"><span class="dot s4"></span>위안</label>
+    <div class="stat-row">
+      <span class="stat-value" id="fx-usd-value">–</span>
+      <span class="stat-delta" id="fx-usd-delta"></span>
     </div>
     <div class="chart-wrap"><canvas id="chart-fx"></canvas></div>
   </section>

@@ -114,8 +114,23 @@ main {
 .stat-row {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 24px;
   margin: 2px 0 10px;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.stat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
 .stat-value {
@@ -146,20 +161,6 @@ main {
   align-items: center;
   gap: 5px;
   cursor: pointer;
-}
-
-.legend {
-  display: flex;
-  gap: 16px;
-  font-size: 0.78rem;
-  color: var(--muted);
-  margin-bottom: 4px;
-}
-
-.legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
 }
 
 .dot {
