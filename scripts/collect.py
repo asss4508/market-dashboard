@@ -92,9 +92,16 @@ def collect_index_and_flow(start, end):
     upsert_json("investor_flow.json", flow_rows)
 
 
-def collect_us10y():
-    """미국 10년물 국채금리 - FRED (키 불필요)"""
-    r = session.get(FRED_US10Y_URL, timeout=REQUEST_TIMEOUT)
+def collect_us10y(start, end):
+    """미국 10년물 국채금리 - FRED (키 불필요).
+
+    전체 역사(1962년~)를 매번 통째로 받으면 응답이 느려 타임아웃이 나므로,
+    다른 수집 함수와 동일하게 필요한 구간만 cosd/coed로 지정해서 받는다.
+    """
+    cosd = f"{start[0:4]}-{start[4:6]}-{start[6:8]}"
+    coed = f"{end[0:4]}-{end[4:6]}-{end[6:8]}"
+    url = f"{FRED_US10Y_URL}&cosd={cosd}&coed={coed}"
+    r = session.get(url, timeout=REQUEST_TIMEOUT)
     r.raise_for_status()
     rows = []
     for line in r.text.strip().splitlines()[1:]:
@@ -232,12 +239,13 @@ def collect_margin_and_deposit(start, end):
 def main():
     end = datetime.date.today()
     backfill = "--backfill" in sys.argv
-    start = datetime.date(2018, 1, 1) if backfill else end - datetime.timedelta(days=10)
+    # 며칠 연속 실행이 실패해도 다음 정상 실행에서 공백이 메워지도록 여유 있게 30일을 본다.
+    start = datetime.date(2018, 1, 1) if backfill else end - datetime.timedelta(days=30)
 
     start_s, end_s = start.strftime("%Y%m%d"), end.strftime("%Y%m%d")
     print(f"수집 범위: {start_s} ~ {end_s} (backfill={backfill})")
 
-    tasks = [("us10y", lambda: collect_us10y())]
+    tasks = [("us10y", lambda: collect_us10y(start_s, end_s))]
     if os.environ.get("KRX_ID") and os.environ.get("KRX_PW"):
         tasks.append(("index/flow", lambda: collect_index_and_flow(start_s, end_s)))
     else:

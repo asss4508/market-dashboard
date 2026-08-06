@@ -251,6 +251,12 @@ function lastYearCutoff() {
   return oneYearAgo.toISOString().slice(0, 10);
 }
 
+function last30YearsCutoff() {
+  const thirtyYearsAgo = new Date();
+  thirtyYearsAgo.setFullYear(thirtyYearsAgo.getFullYear() - 30);
+  return thirtyYearsAgo.toISOString().slice(0, 10);
+}
+
 async function renderFlowChart() {
   const rows = await loadJSON("data/investor_flow.json");
   if (!rows.length) return emptyState("chart-flow", "데이터 준비 중입니다");
@@ -278,17 +284,19 @@ async function renderFlowChart() {
 async function renderUs10yChart() {
   const rows = await loadJSON("data/us10y.json");
   if (!rows.length) return emptyState("chart-us10y", "데이터 준비 중입니다");
-  trackLatest(rows);
-  renderStat("us10y", rows, "yield", { unit: "%", deltaUnit: "%p", showPct: false });
+  const cutoff = last30YearsCutoff();
+  const recent = rows.filter((r) => r.date >= cutoff);
+  trackLatest(recent);
+  renderStat("us10y", recent, "yield", { unit: "%", deltaUnit: "%p", showPct: false });
   const chart = new Chart(document.getElementById("chart-us10y"), {
     type: "line",
     data: {
-      labels: rows.map((r) => r.date),
-      datasets: [baseLineDataset("미국 10년물 금리", rows.map((r) => r.yield), palette[1]())],
+      labels: recent.map((r) => r.date),
+      datasets: [baseLineDataset("미국 10년물 금리", recent.map((r) => r.yield), palette[1]())],
     },
     options: baseOptions(),
   });
-  registerChart("us10y", chart, "미국 10년물 국채금리");
+  registerChart("us10y", chart, "미국 10년물 국채금리 (최근 30년)");
 }
 
 async function renderFxChart() {
