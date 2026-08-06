@@ -95,13 +95,15 @@ def collect_index_and_flow(start, end):
 def collect_us10y(start, end):
     """미국 10년물 국채금리 - FRED (키 불필요).
 
-    전체 역사(1962년~)를 매번 통째로 받으면 응답이 느려 타임아웃이 나므로,
-    다른 수집 함수와 동일하게 필요한 구간만 cosd/coed로 지정해서 받는다.
+    국내 공공 API용으로 붙인 브라우저형 User-Agent를 FRED가 오히려
+    걸고넘어져(타임아웃) 계속 실패했다. FRED는 기본 User-Agent로는
+    문제없이 응답하므로, 이 요청만 공용 session을 쓰지 않고 별도로 받는다.
+    필요한 구간만 cosd/coed로 지정해 매번 전체 역사를 받지 않도록 한다.
     """
     cosd = f"{start[0:4]}-{start[4:6]}-{start[6:8]}"
     coed = f"{end[0:4]}-{end[4:6]}-{end[6:8]}"
     url = f"{FRED_US10Y_URL}&cosd={cosd}&coed={coed}"
-    r = session.get(url, timeout=REQUEST_TIMEOUT)
+    r = requests.get(url, timeout=REQUEST_TIMEOUT)
     r.raise_for_status()
     rows = []
     for line in r.text.strip().splitlines()[1:]:
