@@ -160,6 +160,26 @@ main {
 .stat-delta.down { color: var(--delta-down); }
 .stat-delta.flat { color: var(--muted); }
 
+.stat-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.stat-live:empty {
+  display: none;
+}
+
+.stat-live::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--delta-up);
+}
+
 .toggles {
   display: flex;
   gap: 14px;

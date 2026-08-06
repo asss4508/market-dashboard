@@ -315,6 +315,31 @@ async function renderFxChart() {
   registerChart("fx", chart, "원/달러 환율");
 }
 
+// 코스피/코스닥/원달러/미국10년물은 평일 10분마다 별도 워크플로가 갱신하는
+// 장중 현재가 스냅샷. 기존 일별 종가 차트는 건드리지 않고, 카드에 작은
+// "실시간" 배지로만 얹어서 보여준다.
+const LIVE_STAT_SPECS = [
+  ["kospi", "kospi", ""],
+  ["kosdaq", "kosdaq", ""],
+  ["us10y", "us10y", "%"],
+  ["fx-usd", "usd_krw", "원"],
+];
+
+async function renderLiveStats() {
+  const snap = await loadJSON("data/intraday.json");
+  if (!snap || !snap.updated_at) return;
+  const time = new Date(snap.updated_at).toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  for (const [prefix, key, unit] of LIVE_STAT_SPECS) {
+    const el = document.getElementById(`${prefix}-live`);
+    if (!el || typeof snap[key] !== "number") continue;
+    const formatted = snap[key].toLocaleString("ko-KR", { maximumFractionDigits: 2 });
+    el.textContent = `실시간 ${formatted}${unit} · ${time} 기준`;
+  }
+}
+
 let modalChart = null;
 function openChartModal(key) {
   const entry = chartRegistry[key];
@@ -374,9 +399,13 @@ async function main() {
     renderFlowChart(),
     renderUs10yChart(),
     renderFxChart(),
+    renderLiveStats(),
   ]);
   const el = document.getElementById("last-updated");
   el.textContent = latestDate ? `최신 데이터: ${latestDate}` : "데이터 없음";
+
+  // 탭을 열어둔 동안에는 서버 쪽 10분 주기와 별개로 화면도 주기적으로 새로고침
+  setInterval(renderLiveStats, 60_000);
 }
 
 main();
