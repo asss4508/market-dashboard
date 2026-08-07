@@ -180,6 +180,12 @@ main {
   background: var(--delta-up);
 }
 
+.stat-warn {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--delta-down);
+}
+
 .toggles {
   display: flex;
   gap: 14px;

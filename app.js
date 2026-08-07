@@ -109,6 +109,32 @@ function trackLatest(rows) {
   if (!latestDate || d > latestDate) latestDate = d;
 }
 
+// 데이터 소스가 조용히 며칠씩 실패해도(예: 지난번 FRED 타임아웃) 화면만
+// 봐서는 전혀 티가 안 나던 문제를 막기 위한 경고 배지.
+function daysSince(dateStr) {
+  const then = new Date(dateStr);
+  const now = new Date();
+  return Math.floor((now - then) / 86_400_000);
+}
+
+function showStaleWarning(cardId, message) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const header = card.querySelector(".card-header");
+  if (!header || header.querySelector(".stat-warn")) return;
+  const warn = document.createElement("span");
+  warn.className = "stat-warn";
+  warn.textContent = `⚠ ${message}`;
+  header.appendChild(warn);
+}
+
+function checkDailyStaleness(cardId, rows, thresholdDays = 4) {
+  if (!rows.length) return;
+  const latest = rows[rows.length - 1].date;
+  const gap = daysSince(latest);
+  if (gap > thresholdDays) showStaleWarning(cardId, `${gap}일째 갱신 안됨`);
+}
+
 const chartRegistry = {};
 function registerChart(key, chart, title) {
   chartRegistry[key] = { chart, title };
@@ -158,6 +184,8 @@ async function renderKospiKosdaqCharts() {
   trackLatest(rows);
   renderStat("kospi", rows, "kospi");
   renderStat("kosdaq", rows, "kosdaq");
+  checkDailyStaleness("card-kospi", rows);
+  checkDailyStaleness("card-kosdaq", rows);
 
   const kospiChart = new Chart(document.getElementById("chart-kospi"), {
     type: "line",
@@ -187,6 +215,7 @@ async function renderMarginChart() {
   renderAsOf("margin", rows);
   renderStat("margin-kospi", rows, "kospi_margin", { unit: "조원" });
   renderStat("margin-kosdaq", rows, "kosdaq_margin", { unit: "조원" });
+  checkDailyStaleness("card-margin", rows);
   const chart = new Chart(document.getElementById("chart-margin"), {
     type: "line",
     data: {
@@ -207,6 +236,7 @@ async function renderDepositChart() {
   trackLatest(rows);
   renderAsOf("deposit", rows);
   renderStat("deposit", rows, "deposit", { unit: "조원" });
+  checkDailyStaleness("card-deposit", rows);
   const chart = new Chart(document.getElementById("chart-deposit"), {
     type: "line",
     data: {
@@ -226,6 +256,7 @@ async function renderReverseChart() {
   const recent = rows.filter((r) => r.date >= cutoff);
   renderAsOf("reverse", recent);
   renderStat("reverse", recent, "amount", { unit: "억원" });
+  checkDailyStaleness("card-reverse", rows);
   const chart = new Chart(document.getElementById("chart-reverse"), {
     type: "line",
     data: {
@@ -264,6 +295,7 @@ async function renderFlowChart() {
 
   const cutoff = lastYearCutoff();
   const recent = rows.filter((r) => r.date >= cutoff);
+  checkDailyStaleness("card-flow", rows);
 
   const chart = new Chart(document.getElementById("chart-flow"), {
     type: "line",
@@ -288,6 +320,7 @@ async function renderUs10yChart() {
   const recent = rows.filter((r) => r.date >= cutoff);
   trackLatest(recent);
   renderStat("us10y", recent, "yield", { unit: "%", deltaUnit: "%p", showPct: false });
+  checkDailyStaleness("card-us10y", rows);
   const chart = new Chart(document.getElementById("chart-us10y"), {
     type: "line",
     data: {
@@ -304,6 +337,7 @@ async function renderFxChart() {
   if (!rows.length) return emptyState("chart-fx", "데이터 준비 중입니다");
   trackLatest(rows);
   renderStat("fx-usd", rows, "usd_krw", { unit: "원" });
+  checkDailyStaleness("card-fx", rows);
   const chart = new Chart(document.getElementById("chart-fx"), {
     type: "line",
     data: {
@@ -319,10 +353,10 @@ async function renderFxChart() {
 // 장중 현재가 스냅샷. 기존 일별 종가 차트는 건드리지 않고, 카드에 작은
 // "실시간" 배지로만 얹어서 보여준다.
 const LIVE_STAT_SPECS = [
-  ["kospi", "kospi", ""],
-  ["kosdaq", "kosdaq", ""],
-  ["us10y", "us10y", "%"],
-  ["fx-usd", "usd_krw", "원"],
+  ["kospi", "kospi", "", "card-kospi"],
+  ["kosdaq", "kosdaq", "", "card-kosdaq"],
+  ["us10y", "us10y", "%", "card-us10y"],
+  ["fx-usd", "usd_krw", "원", "card-fx"],
 ];
 
 async function renderLiveStats() {
@@ -337,6 +371,15 @@ async function renderLiveStats() {
     if (!el || typeof snap[key] !== "number") continue;
     const formatted = snap[key].toLocaleString("ko-KR", { maximumFractionDigits: 2 });
     el.textContent = `실시간 ${formatted}${unit} · ${time} 기준`;
+  }
+
+  // 주말엔 워크플로가 원래 안 돌아 오래된 게 정상이라, 평일에만 경고
+  const isWeekday = ![0, 6].includes(new Date().getDay());
+  const staleMinutes = Math.floor((Date.now() - new Date(snap.updated_at).getTime()) / 60_000);
+  if (isWeekday && staleMinutes > 180) {
+    for (const [, , , cardId] of LIVE_STAT_SPECS) {
+      showStaleWarning(cardId, `실시간 갱신 ${Math.floor(staleMinutes / 60)}시간째 안됨`);
+    }
   }
 }
 

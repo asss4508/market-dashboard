@@ -33,5 +33,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/*.json
-          git diff --cached --quiet || git commit -m "chore: daily market data update"
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: daily market data update"
+          # intraday-update.yml과 동시에 돌 수 있어 push 충돌 가능성이 있으므로 rebase 후 재시도
+          git pull --rebase origin master
           git push
