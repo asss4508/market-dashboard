@@ -135,6 +135,12 @@ function checkDailyStaleness(cardId, rows, thresholdDays = 4) {
   if (gap > thresholdDays) showStaleWarning(cardId, `${gap}일째 갱신 안됨`);
 }
 
+// FRED(미국채)·KOFIA(신용융자/예탁금/반대매매)는 소스 자체가 며칠씩 늦게
+// 발표하는 경우가 흔해서, 주말+발표 지연이 겹치는 월요일마다 오탐이
+// 뜨지 않도록 코스피/코스닥/원달러보다 여유 있게 잡는다.
+const FRED_STALE_THRESHOLD_DAYS = 7;
+const KOFIA_STALE_THRESHOLD_DAYS = 7;
+
 const chartRegistry = {};
 function registerChart(key, chart, title) {
   chartRegistry[key] = { chart, title };
@@ -215,7 +221,7 @@ async function renderMarginChart() {
   renderAsOf("margin", rows);
   renderStat("margin-kospi", rows, "kospi_margin", { unit: "조원" });
   renderStat("margin-kosdaq", rows, "kosdaq_margin", { unit: "조원" });
-  checkDailyStaleness("card-margin", rows);
+  checkDailyStaleness("card-margin", rows, KOFIA_STALE_THRESHOLD_DAYS);
   const chart = new Chart(document.getElementById("chart-margin"), {
     type: "line",
     data: {
@@ -236,7 +242,7 @@ async function renderDepositChart() {
   trackLatest(rows);
   renderAsOf("deposit", rows);
   renderStat("deposit", rows, "deposit", { unit: "조원" });
-  checkDailyStaleness("card-deposit", rows);
+  checkDailyStaleness("card-deposit", rows, KOFIA_STALE_THRESHOLD_DAYS);
   const chart = new Chart(document.getElementById("chart-deposit"), {
     type: "line",
     data: {
@@ -256,7 +262,7 @@ async function renderReverseChart() {
   const recent = rows.filter((r) => r.date >= cutoff);
   renderAsOf("reverse", recent);
   renderStat("reverse", recent, "amount", { unit: "억원" });
-  checkDailyStaleness("card-reverse", rows);
+  checkDailyStaleness("card-reverse", rows, KOFIA_STALE_THRESHOLD_DAYS);
   const chart = new Chart(document.getElementById("chart-reverse"), {
     type: "line",
     data: {
@@ -320,7 +326,7 @@ async function renderUs10yChart() {
   const recent = rows.filter((r) => r.date >= cutoff);
   trackLatest(recent);
   renderStat("us10y", recent, "yield", { unit: "%", deltaUnit: "%p", showPct: false });
-  checkDailyStaleness("card-us10y", rows);
+  checkDailyStaleness("card-us10y", rows, FRED_STALE_THRESHOLD_DAYS);
   const chart = new Chart(document.getElementById("chart-us10y"), {
     type: "line",
     data: {
