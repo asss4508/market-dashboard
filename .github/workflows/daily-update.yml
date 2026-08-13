@@ -2,7 +2,7 @@ name: Daily market data update
 
 on:
   schedule:
-    - cron: "0 0,12 * * *" # 매일 KST 09:00 / 21:00 (UTC 00:00, 12:00) - 12시간 간격
+    - cron: "0 */4 * * *" # 매 4시간마다 (UTC 0,4,8,12,16,20 / KST 09,13,17,21,01,05)
   workflow_dispatch: {}
 
 permissions:
