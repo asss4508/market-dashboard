@@ -146,6 +146,10 @@ function registerChart(key, chart, title) {
   chartRegistry[key] = { chart, title };
 }
 
+// renderStat이 그린 일별 종가 값을 기억해뒀다가, 실시간 스냅샷이 오면
+// applyLiveStat이 "전일 종가 대비" 등락을 다시 계산하는 데 쓴다.
+const dailyCloseRegistry = {};
+
 function renderStat(prefix, rows, field, opts = {}) {
   const { unit = "", deltaUnit = unit, showPct = true } = opts;
   const valid = rows.filter((r) => typeof r[field] === "number");
@@ -157,6 +161,7 @@ function renderStat(prefix, rows, field, opts = {}) {
     return;
   }
   const last = valid[valid.length - 1][field];
+  dailyCloseRegistry[prefix] = { value: last, unit, deltaUnit, showPct };
   valueEl.textContent = `${last.toLocaleString("ko-KR", { maximumFractionDigits: 2 })}${unit}`;
   if (valid.length < 2) return;
   const prev = valid[valid.length - 2][field];
@@ -167,6 +172,29 @@ function renderStat(prefix, rows, field, opts = {}) {
     return;
   }
   const pct = (diff / prev) * 100;
+  const dir = diff > 0 ? "up" : "down";
+  const arrow = diff > 0 ? "▲" : "▼";
+  const pctPart = showPct ? ` (${diff > 0 ? "+" : ""}${pct.toFixed(2)}%)` : "";
+  deltaEl.textContent = `${arrow} ${Math.abs(diff).toLocaleString("ko-KR", { maximumFractionDigits: 2 })}${deltaUnit}${pctPart}`;
+  deltaEl.className = `stat-delta ${dir}`;
+}
+
+// 실시간 스냅샷 값을 카드의 메인 숫자로 올려 쓰고, 등락은 직전 일별
+// 종가(dailyCloseRegistry) 대비로 다시 계산한다.
+function applyLiveStat(prefix, liveValue) {
+  const ref = dailyCloseRegistry[prefix];
+  const valueEl = document.getElementById(`${prefix}-value`);
+  const deltaEl = document.getElementById(`${prefix}-delta`);
+  if (!ref || !valueEl || !deltaEl) return;
+  const { unit, deltaUnit, showPct } = ref;
+  valueEl.textContent = `${liveValue.toLocaleString("ko-KR", { maximumFractionDigits: 2 })}${unit}`;
+  const diff = liveValue - ref.value;
+  if (diff === 0) {
+    deltaEl.textContent = "보합";
+    deltaEl.className = "stat-delta flat";
+    return;
+  }
+  const pct = (diff / ref.value) * 100;
   const dir = diff > 0 ? "up" : "down";
   const arrow = diff > 0 ? "▲" : "▼";
   const pctPart = showPct ? ` (${diff > 0 ? "+" : ""}${pct.toFixed(2)}%)` : "";
@@ -356,34 +384,34 @@ async function renderFxChart() {
 }
 
 // 코스피/코스닥/원달러/미국10년물은 평일 10분마다 별도 워크플로가 갱신하는
-// 장중 현재가 스냅샷. 기존 일별 종가 차트는 건드리지 않고, 카드에 작은
-// "실시간" 배지로만 얹어서 보여준다.
+// 장중 현재가 스냅샷. 이 값이 있으면 카드의 메인 숫자 자체를 실시간 값으로
+// 덮어쓰고(applyLiveStat), 등락도 실시간 기준으로 다시 계산한다.
 const LIVE_STAT_SPECS = [
-  ["kospi", "kospi", "", "card-kospi"],
-  ["kosdaq", "kosdaq", "", "card-kosdaq"],
-  ["us10y", "us10y", "%", "card-us10y"],
-  ["fx-usd", "usd_krw", "원", "card-fx"],
+  ["kospi", "kospi", "card-kospi"],
+  ["kosdaq", "kosdaq", "card-kosdaq"],
+  ["us10y", "us10y", "card-us10y"],
+  ["fx-usd", "usd_krw", "card-fx"],
 ];
 
-async function renderLiveStats() {
+async function updateLiveStats() {
   const snap = await loadJSON("data/intraday.json");
   if (!snap || !snap.updated_at) return;
   const time = new Date(snap.updated_at).toLocaleTimeString("ko-KR", {
     hour: "2-digit",
     minute: "2-digit",
   });
-  for (const [prefix, key, unit] of LIVE_STAT_SPECS) {
+  for (const [prefix, key, cardId] of LIVE_STAT_SPECS) {
+    if (typeof snap[key] !== "number") continue;
+    applyLiveStat(prefix, snap[key]);
     const el = document.getElementById(`${prefix}-live`);
-    if (!el || typeof snap[key] !== "number") continue;
-    const formatted = snap[key].toLocaleString("ko-KR", { maximumFractionDigits: 2 });
-    el.textContent = `실시간 ${formatted}${unit} · ${time} 기준`;
+    if (el) el.textContent = `실시간 · ${time} 기준`;
   }
 
   // 주말엔 워크플로가 원래 안 돌아 오래된 게 정상이라, 평일에만 경고
   const isWeekday = ![0, 6].includes(new Date().getDay());
   const staleMinutes = Math.floor((Date.now() - new Date(snap.updated_at).getTime()) / 60_000);
   if (isWeekday && staleMinutes > 180) {
-    for (const [, , , cardId] of LIVE_STAT_SPECS) {
+    for (const [, , cardId] of LIVE_STAT_SPECS) {
       showStaleWarning(cardId, `실시간 갱신 ${Math.floor(staleMinutes / 60)}시간째 안됨`);
     }
   }
@@ -448,13 +476,15 @@ async function main() {
     renderFlowChart(),
     renderUs10yChart(),
     renderFxChart(),
-    renderLiveStats(),
   ]);
+  // 일별 종가 기준 카드가 먼저 그려진 뒤(dailyCloseRegistry 채워진 뒤)라야
+  // 실시간 값으로 메인 숫자를 덮어쓸 기준(전일 종가)이 생긴다.
+  await updateLiveStats();
   const el = document.getElementById("last-updated");
   el.textContent = latestDate ? `최신 데이터: ${latestDate}` : "데이터 없음";
 
   // 탭을 열어둔 동안에는 서버 쪽 10분 주기와 별개로 화면도 주기적으로 새로고침
-  setInterval(renderLiveStats, 60_000);
+  setInterval(updateLiveStats, 60_000);
 }
 
 main();
