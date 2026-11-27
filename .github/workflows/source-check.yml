@@ -1,6 +1,12 @@
 name: Check public source schemas
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Select read-only diagnostic"
+        type: choice
+        options: [kofia, krx]
+        default: kofia
 permissions:
   contents: read
 jobs:
@@ -13,7 +19,20 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install requests
+      - name: Install verified KRX diagnostic dependency
+        if: inputs.target == 'krx'
+        run: pip install pykrx==1.2.8
+      - name: Test safe login diagnostic
+        if: inputs.target == 'krx'
+        run: python -m unittest discover -s scripts -p 'test_krx_connection.py'
       - name: Inspect public KOFIA schema with sanitized output
+        if: inputs.target != 'krx'
         env:
           DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
         run: python scripts/diagnose_kofia.py
+      - name: Verify one KRX login without exposing credentials
+        if: inputs.target == 'krx'
+        env:
+          KRX_ID: ${{ secrets.KRX_ID }}
+          KRX_PW: ${{ secrets.KRX_PW }}
+        run: python scripts/check_krx_connection.py --strict
