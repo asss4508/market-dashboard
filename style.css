@@ -124,7 +124,7 @@ dl { margin: 0; }
 .tile-move { font-size: 12px; line-height: 1.4; font-weight: 650; }
 .tile-meta { color: var(--subtle); font-size: 12px; margin-top: 5px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1px 6px; }
 .tile-meta a { color: inherit; }
-.tile-missing { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.tile-missing { color: var(--muted); font-size: 12px; line-height: 1.5; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .up { color: var(--up); }
 .down { color: var(--down); }
 .flat, .muted { color: var(--muted); }
@@ -346,7 +346,6 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
   .tile-name { font-size: 12px; }
   .tile-value { font-size: 19px; }
   .tile-value small { padding-left: 1px; }
-  .tile-missing { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
   .page-heading { flex-wrap: wrap; }
   .toolbar-label { flex-basis: 100%; }
   .date-presets button { padding-inline: 7px; }
