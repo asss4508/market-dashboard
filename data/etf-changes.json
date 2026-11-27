@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-27T09:30:53+09:00",
+  "generatedAt": "2026-11-27T09:38:16+09:00",
   "etfs": [
     {
       "id": "tiger",
@@ -9,7 +9,7 @@
       "issuer": "미래에셋자산운용",
       "sourceName": "미래에셋자산운용",
       "sourceUrl": "https://prod.investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR70204S0006",
-      "status": "current",
+      "status": "delayed",
       "scope": "holdings-per-cu",
       "latest": {
         "date": "2026-11-27",
@@ -3221,7 +3221,7 @@
       "issuer": "삼성액티브자산운용",
       "sourceName": "삼성액티브자산운용",
       "sourceUrl": "https://www.samsungactive.co.kr/etf/view.do?id=2ETFU6",
-      "status": "current",
+      "status": "delayed",
       "scope": "holdings-per-cu",
       "latest": {
         "date": "2026-11-27",
@@ -6462,5 +6462,22 @@
       "gapDates": []
     }
   ],
-  "errors": []
+  "errors": [
+    {
+      "id": "tiger",
+      "code": "http_error",
+      "stage": "tiger_workbook",
+      "date": "2026-11-27",
+      "httpStatus": 403,
+      "message": "해당 날짜의 공개 구성종목을 확인할 수 없어 검증된 자료를 유지합니다."
+    },
+    {
+      "id": "koact",
+      "code": "http_error",
+      "stage": "koact_pdf",
+      "date": "2026-11-27",
+      "httpStatus": 403,
+      "message": "해당 날짜의 공개 구성종목을 확인할 수 없어 검증된 자료를 유지합니다."
+    }
+  ]
 }
