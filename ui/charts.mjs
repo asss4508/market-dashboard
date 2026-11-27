@@ -2,6 +2,7 @@
 
 const colors = () => getComputedStyle(document.documentElement);
 const instances = new Set();
+const rangeViews = new Set();
 const chartPreferences = new Map();
 let sharedDay = null;
 let drag = null;
@@ -14,6 +15,7 @@ function preferences(key, series) {
       overlays: new Set(),
       technicalOpen: false,
       brush: false,
+      zoomActive: false,
     });
   }
   return chartPreferences.get(key);
@@ -25,6 +27,9 @@ function resetPointer() {
 }
 
 export function destroyPlots(container) {
+  for (const view of rangeViews) {
+    if (container.contains(view.card)) rangeViews.delete(view);
+  }
   for (const plot of instances) {
     if (container.contains(plot.chart.canvas)) {
       if (drag?.plot === plot) resetPointer();
@@ -115,12 +120,66 @@ function pointerDay(chart, event) {
   const rect = chart.canvas.getBoundingClientRect();
   const pos = (event.clientX - rect.left) * chart.width / rect.width;
   const x = Math.max(chart.chartArea.left, Math.min(chart.chartArea.right, pos));
-  return Math.round(chart.scales.x.getValueForPixel(x));
+  return chart.scales.x.getValueForPixel(x);
+}
+
+function zoomRange(plot, from, to) {
+  const [minimum, maximum] = plot.bounds;
+  const span = Math.min(maximum - minimum, Math.max(2, to - from));
+  let start = Math.max(minimum, Math.min(maximum - span, from));
+  if (plot.allDays.length && !plot.allDays.some((day) => day >= Math.round(start) && day <= Math.round(start + span))) {
+    const nearest = closestDay(plot.allDays, start + span / 2);
+    start = Math.max(minimum, Math.min(maximum - span, nearest - span / 2));
+  }
+  const range = { from: dateString(Math.round(start)), to: dateString(Math.round(start + span)) };
+  const current = plot.view.range;
+  if (range.from === current.from && range.to === current.to) return false;
+  for (const target of [...rangeViews]) {
+    if (rangeViews.has(target) && target.card.isConnected) target.setRange(range);
+  }
+  plot.onZoom?.(range.from, range.to, { interactive: true });
+  redraw();
+  return true;
+}
+
+function zoomAt(plot, anchor, factor) {
+  const scale = plot.chart.scales.x;
+  if (factor > 1 && scale.min <= plot.bounds[0] && scale.max >= plot.bounds[1]) return false;
+  const span = scale.max - scale.min;
+  const ratio = span ? (anchor - scale.min) / span : 0.5;
+  const next = Math.max(2, span * factor);
+  return zoomRange(plot, anchor - next * ratio, anchor + next * (1 - ratio));
 }
 
 function wirePlot(plot, onZoom) {
   const canvas = plot.chart.canvas;
+  const touches = new Map();
+  let pinch = null;
+  const touchPair = () => [...touches.values()].slice(0, 2);
+  const startPinch = () => {
+    if (touches.size !== 2) return;
+    const [a, b] = touchPair();
+    const distance = Math.hypot(b.x - a.x, b.y - a.y);
+    const scale = plot.chart.scales.x;
+    const anchor = pointerDay(plot.chart, { clientX: (a.x + b.x) / 2 });
+    pinch = { distance, anchor, from: scale.min, to: scale.max };
+    drag = null;
+  };
   canvas.addEventListener("pointermove", (event) => {
+    plot.readout.setAttribute("aria-live", "off");
+    if (touches.has(event.pointerId)) {
+      touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (pinch && touches.size === 2) {
+        const [a, b] = touchPair();
+        const distance = Math.hypot(b.x - a.x, b.y - a.y);
+        if (distance > 0 && pinch.distance > 0) {
+          const factor = pinch.distance / distance;
+          zoomRange(plot, pinch.anchor - (pinch.anchor - pinch.from) * factor,
+            pinch.anchor + (pinch.to - pinch.anchor) * factor);
+        }
+        return;
+      }
+    }
     const raw = pointerDay(plot.chart, event);
     if (drag?.plot === plot) drag.end = raw;
     sharedDay = closestDay(plot.days, raw);
@@ -132,6 +191,13 @@ function wirePlot(plot, onZoom) {
     redraw();
   });
   canvas.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "touch" && onZoom && plot.state.zoomActive) {
+      touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      canvas.setPointerCapture(event.pointerId);
+      startPinch();
+      return;
+    }
+    if (onZoom && event.pointerType !== "touch" && event.button === 0) plot.setZoomActive(true);
     if (!onZoom || !plot.state.brush || event.button !== 0) return;
     const raw = pointerDay(plot.chart, event);
     drag = { plot, start: raw, end: raw };
@@ -139,32 +205,56 @@ function wirePlot(plot, onZoom) {
     redraw();
   });
   canvas.addEventListener("pointerup", (event) => {
+    touches.delete(event.pointerId);
+    if (touches.size < 2) pinch = null;
     if (drag?.plot !== plot) return;
     const { start } = drag;
     const end = pointerDay(plot.chart, event);
     resetPointer();
-    if (Math.abs(end - start) >= 2) onZoom(dateString(Math.min(start, end)), dateString(Math.max(start, end)));
+    if (Math.abs(end - start) >= 2) zoomRange(plot, Math.min(start, end), Math.max(start, end));
     redraw();
   });
   canvas.addEventListener("pointercancel", () => {
+    touches.clear();
+    pinch = null;
     resetPointer();
     redraw();
   });
+  canvas.addEventListener("wheel", (event) => {
+    if (!onZoom || !plot.state.zoomActive || !event.deltaY || !plot.days.length) return;
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? canvas.clientHeight : 1;
+    const delta = Math.max(-240, Math.min(240, event.deltaY * unit));
+    const changed = zoomAt(plot, pointerDay(plot.chart, event), Math.exp(delta * 0.0025));
+    if (changed) event.preventDefault();
+  }, { passive: false });
   canvas.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      plot.setZoomActive(false);
       resetPointer();
       redraw();
       return;
     }
+    if (onZoom && ["+", "=", "-", "_", "Home"].includes(event.key)) {
+      event.preventDefault();
+      plot.setZoomActive(true);
+      const scale = plot.chart.scales.x;
+      const anchor = sharedDay !== null && sharedDay >= scale.min && sharedDay <= scale.max
+        ? sharedDay : (scale.min + scale.max) / 2;
+      if (event.key === "Home") zoomRange(plot, ...plot.bounds);
+      else zoomAt(plot, anchor, event.key === "+" || event.key === "=" ? 0.75 : 1 / 0.75);
+      return;
+    }
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
     event.preventDefault();
+    plot.readout.setAttribute("aria-live", "polite");
     const nearest = closestDay(plot.days, sharedDay ?? plot.days.at(-1));
     const index = plot.days.indexOf(nearest);
     const move = event.key === "ArrowLeft" ? -1 : 1;
     sharedDay = plot.days[Math.max(0, Math.min(plot.days.length - 1, index + move))];
     redraw();
   });
-  canvas.addEventListener("blur", () => {
+  canvas.addEventListener("blur", (event) => {
+    if (event.relatedTarget !== plot.buttonZoom) plot.setZoomActive(false);
     sharedDay = null;
     redraw();
   });
@@ -245,9 +335,10 @@ function plotOptions(view, dataset) {
   const tokens = colors();
   const muted = tokens.getPropertyValue("--muted").trim();
   const grid = tokens.getPropertyValue("--grid").trim();
-  const dates = view.range;
-  const xMin = toDay(dates.from);
-  const xMax = Math.max(xMin + 1, toDay(dates.to));
+  const days = dataset.filter((line) => !line.hidden).flatMap((line) => line.data
+    .filter((point) => valid(point.y)).map((point) => point.x));
+  const xMin = days.length ? days.reduce((a, b) => Math.min(a, b)) : toDay(view.range.from);
+  const xMax = Math.max(xMin + 1, days.length ? days.reduce((a, b) => Math.max(a, b)) : toDay(view.range.to));
   const width = xMax - xMin;
   const digits = dataset.some((ds) => ds.digits > 2) ? 3 : 2;
   const font = { family: tokens.getPropertyValue("--numeric").trim(), size: 12 };
@@ -288,7 +379,8 @@ function lineSummary(lines) {
 }
 
 export function chartCard(spec, options) {
-  const { view, dialog, onZoom, technical } = options;
+  const { dialog, onZoom, technical } = options;
+  const view = { ...options.view, range: { ...options.view.range } };
   const state = preferences(spec.key, spec.lines);
   const card = create("article", { className: "card chart-card " + (spec.hero ? "hero-chart " : "") + (spec.span || "span-6") });
   const title = create("div", {}, create("h3", { text: spec.title }));
@@ -309,8 +401,9 @@ export function chartCard(spec, options) {
     return card;
   }
 
-  const readout = create("div", { className: "chart-readout" }, " ");
-  const canvas = create("canvas", { role: "img", tabindex: 0, "aria-label": spec.title + " 시계열 차트. 방향키로 날짜를 이동합니다." });
+  const readout = create("div", { className: "chart-readout", "aria-live": "off", "aria-atomic": "true" }, " ");
+  const helpId = "chart-help-" + spec.key;
+  const canvas = create("canvas", { role: "img", tabindex: 0, "aria-label": spec.title + " 시계열 차트. 방향키로 날짜 이동, 더하기와 빼기 키로 확대와 축소, Home으로 전체 기간, Escape로 확대 조작을 해제합니다.", "aria-describedby": helpId });
   const wrap = create("div", { className: "chart-wrap" }, canvas);
   const legend = create("div", { className: "chart-legend", role: "group", "aria-label": "표시할 계열" });
   const controls = create("div", { className: "chart-controls" }, legend);
@@ -319,13 +412,25 @@ export function chartCard(spec, options) {
   const periodEmpty = empty("조회 기간에 표시할 관측치가 없습니다.");
   const buttonExport = create("button", { className: "button", type: "button", text: "CSV", title: "표시 중인 차트 데이터 다운로드" });
   const buttonBrush = onZoom && create("button", { className: "button", type: "button", text: "드래그 확대", "aria-pressed": String(state.brush) });
+  const buttonZoom = onZoom && create("button", { className: "button", type: "button", text: "휠·터치 확대", "aria-pressed": String(state.zoomActive) });
   const buttonExpand = dialog && !spec.noExpand && create("button", { className: "button", type: "button", text: "크게 보기" });
-  actions.append(...[buttonExport, buttonBrush, buttonExpand].filter(Boolean));
+  actions.append(...[buttonExport, buttonZoom, buttonBrush, buttonExpand].filter(Boolean));
+  const help = create("p", { id: helpId, className: "chart-interaction-help meta" });
   wrap.classList.toggle("drag-enabled", state.brush && Boolean(onZoom));
   let plot;
   let lastDataset = [];
 
-  function renderPlot() {
+  function setZoomActive(active) {
+    state.zoomActive = Boolean(active && onZoom);
+    buttonZoom?.setAttribute("aria-pressed", String(state.zoomActive));
+    wrap.classList.toggle("zoom-enabled", state.zoomActive);
+    help.textContent = state.zoomActive
+      ? "확대 조작 중 · 휠 / 두 손가락 / + − 키 · Home 전체 기간 · Esc 또는 버튼으로 해제"
+      : "차트 클릭 또는 ‘휠·터치 확대’ → 확대·축소 · 방향키로 날짜 확인";
+  }
+  setZoomActive(state.zoomActive);
+
+  function renderPlot(updateIndicators = true) {
     if (!card.isConnected) return;
     const activeLines = actual.filter((line) => !state.hidden.has(line.id));
     const baseLine = activeLines[0];
@@ -347,8 +452,10 @@ export function chartCard(spec, options) {
     lastDataset = dataset;
     buttonExport.disabled = !days.length;
     if (buttonBrush) buttonBrush.disabled = !days.length;
+    if (buttonZoom) buttonZoom.disabled = !days.length;
     wrap.hidden = !days.length;
     readout.hidden = !days.length;
+    help.hidden = !days.length || !onZoom;
     periodEmpty.hidden = Boolean(days.length);
     const mode = view.indexed && !indexingUsable ? "원래 단위 · 기준 100 적용 불가" : indexingUsable ? "기준 100" : "원래 단위";
     rangeNote.textContent = days.length ? mode + " · 관측 " + dateString(days[0]) + " ~ " + dateString(days.at(-1)) : "";
@@ -356,6 +463,7 @@ export function chartCard(spec, options) {
     if (plot) {
       plot.chart.data.datasets = dataset;
       plot.days = days;
+      plot.chart.options = plotOptions(view, dataset);
       plot.chart.update("none");
     } else if (days.length) {
       const chart = new globalThis.Chart(canvas, {
@@ -364,13 +472,21 @@ export function chartCard(spec, options) {
         options: plotOptions(view, dataset),
         plugins: [crosshair],
       });
-      plot = { chart, days, state, readout };
+      plot = { chart, days, state, readout, view, onZoom, setZoomActive, buttonZoom };
       instances.add(plot);
       wirePlot(plot, onZoom);
     }
+    if (plot) {
+      const available = activeLines.flatMap((line) => line.points.filter((point) => valid(point.value)).map((point) => toDay(point.date)));
+      const minimum = available.length ? available.reduce((a, b) => Math.min(a, b)) : toDay(view.range.from);
+      const maximum = available.length ? available.reduce((a, b) => Math.max(a, b)) : toDay(view.range.to);
+      plot.bounds = [Math.max(minimum, toDay(view.bounds?.from || dateString(minimum))),
+        Math.min(maximum, toDay(view.bounds?.to || dateString(maximum)))];
+      plot.allDays = [...new Set(available)].sort((a, b) => a - b);
+    }
     const currentSummary = lineSummary(activeLines.map((line) => ({ ...line, hidden: false })));
     summary.replaceChildren(...currentSummary.childNodes);
-    formatIndicators();
+    if (updateIndicators) formatIndicators();
   }
 
   function formatIndicators() {
@@ -379,7 +495,7 @@ export function chartCard(spec, options) {
     if (!spec.technical || !technical) return;
     const base = actual.find((line) => !state.hidden.has(line.id));
     if (!base) return;
-    const techOptions = { ...options, dialog: null, onZoom: null };
+    const techOptions = { ...options, view, dialog: null };
     if (state.overlays.has("rsi")) {
       const points = technical.rsi(base.points, 14);
       indicators.append(chartCard({
@@ -433,7 +549,7 @@ export function chartCard(spec, options) {
     details.addEventListener("toggle", () => { state.technicalOpen = details.open; });
     card.append(details);
   }
-  card.append(readout, wrap, periodEmpty, rangeNote, indicators);
+  card.append(readout, wrap, periodEmpty, rangeNote, help, indicators);
   if (spec.footnote) card.append(create("p", { className: "footnote", text: spec.footnote }));
 
   buttonBrush?.addEventListener("click", () => {
@@ -441,11 +557,15 @@ export function chartCard(spec, options) {
     buttonBrush.setAttribute("aria-pressed", String(state.brush));
     wrap.classList.toggle("drag-enabled", state.brush);
   });
+  buttonZoom?.addEventListener("click", () => {
+    setZoomActive(!state.zoomActive);
+    if (state.zoomActive) canvas.focus({ preventScroll: true });
+  });
   buttonExpand?.addEventListener("click", () => {
     const modalKey = spec.key + "-modal";
     chartPreferences.set(modalKey, { ...state, hidden: new Set(state.hidden), overlays: new Set(state.overlays) });
     const modal = chartCard({ ...spec, key: modalKey, hero: false, noExpand: true },
-      { ...options, onZoom: null, dialog: null });
+      { ...options, view, dialog: null });
     modal.classList.add("chart-modal");
     dialog(spec.title, modal);
   });
@@ -463,6 +583,7 @@ export function chartCard(spec, options) {
     const rows = [...data].sort(([a], [b]) => a - b).map(([day, values]) => [dateString(day), ...values]);
     downloadCsv(spec.key + "-" + view.range.from + "_" + view.range.to + ".csv", [header, ...rows]);
   });
+  rangeViews.add({ card, setRange: (range) => { view.range = { ...range }; renderPlot(false); } });
   queueMicrotask(renderPlot);
   return card;
 }

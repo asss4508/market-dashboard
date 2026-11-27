@@ -110,6 +110,51 @@ class DashboardTest(unittest.TestCase):
 
 
 class SourcesTest(unittest.TestCase):
+    def test_monthly_investor_amounts_keep_their_own_frequency_and_history(self):
+        client = Mock()
+        client.get.return_value = json.dumps({"StatisticSearch": {"list_total_count": 1, "row": [{
+            "STAT_CODE": "901Y055", "ITEM_CODE1": "S22CA", "ITEM_CODE2": "VA",
+            "UNIT_NAME": "백만원", "TIME": "202610", "DATA_VALUE": "4729682",
+        }]}}).encode()
+        points = ecos_observations(client, "institution_net_monthly", "mock",
+                                   date(2026, 6, 1), date(2026, 11, 27))
+        self.assertEqual(points, [("2026-10-31", 47296.82)])
+        self.assertTrue(client.get.call_args.args[1].endswith("/901Y055/M/202606/202611/S22CA/VA"))
+        with tempfile.TemporaryDirectory() as temporary:
+            dashboard = Dashboard(Path(temporary), datetime(2026, 11, 27, 18, tzinfo=KST))
+            dashboard.success("institution_net", [("2026-10-14", 111)])
+            dashboard.success("institution_net_monthly", points)
+            series = dashboard.write()["series"]
+            self.assertEqual(series["institution_net"]["asOf"], "2026-10-14")
+            self.assertEqual(series["institution_net"]["points"][0]["value"], 111)
+            self.assertEqual(series["institution_net_monthly"]["frequency"], "monthly")
+            self.assertEqual(len(series["institution_net_monthly"]["points"]), 1)
+            self.assertEqual(series["institution_net_monthly"]["scope"], "ECOS 투자자별 주식거래 공표 범위")
+
+    def test_monthly_investor_volume_cannot_be_mistaken_for_amount(self):
+        for field, invalid, expected in (("ITEM_CODE2", "VO", "unexpected_series"),
+                                         ("UNIT_NAME", "천주", "unexpected_unit")):
+            row = {"STAT_CODE": "901Y055", "ITEM_CODE1": "S22CB", "ITEM_CODE2": "VA",
+                   "UNIT_NAME": "백만원", "TIME": "202610", "DATA_VALUE": "100"}
+            row[field] = invalid
+            client = Mock()
+            client.get.return_value = json.dumps({"StatisticSearch": {"list_total_count": 1, "row": [row]}}).encode()
+            with self.subTest(field=field), self.assertRaises(CollectionError) as raised:
+                ecos_observations(client, "individual_net_monthly", "mock",
+                                  date(2026, 10, 1), date(2026, 11, 27))
+            self.assertEqual(raised.exception.code, expected)
+
+    def test_monthly_investor_missing_and_unfinished_periods_are_not_zero_or_current_daily_values(self):
+        client = Mock()
+        client.get.return_value = json.dumps({"StatisticSearch": {"list_total_count": 3, "row": [
+            {"STAT_CODE": "901Y055", "ITEM_CODE1": "S22CC", "ITEM_CODE2": "VA",
+             "UNIT_NAME": "백만원", "TIME": month, "DATA_VALUE": value}
+            for month, value in (("202609", "-"), ("202610", "-12000"), ("202611", "300"))
+        ]}}).encode()
+        points = ecos_observations(client, "foreign_net_monthly", "mock",
+                                   date(2026, 9, 1), date(2026, 11, 27))
+        self.assertEqual(points, [("2026-10-31", -120)])
+
     def test_ecos_monthly_period_uses_period_end_and_preserves_unit(self):
         client = Mock()
         client.get.return_value = json.dumps({"StatisticSearch": {"list_total_count": 1, "row": [{

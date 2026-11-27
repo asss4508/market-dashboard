@@ -183,6 +183,9 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 .chart-wrap { position: relative; height: 236px; padding: 4px 12px 2px 6px; }
 .chart-wrap canvas { display: block; width: 100%; max-width: 100%; touch-action: pan-y; }
 .chart-wrap.drag-enabled canvas { cursor: crosshair; touch-action: none; }
+.chart-wrap.zoom-enabled canvas { cursor: zoom-in; touch-action: none; }
+.chart-wrap.zoom-enabled { outline: 1px solid var(--accent); outline-offset: -1px; }
+.chart-interaction-help { padding: 1px 16px 10px; line-height: 1.6; }
 .hero-chart .chart-wrap { height: clamp(280px, 29vw, 460px); }
 .chart-card .footnote { padding: 4px 16px 12px; }
 .chart-modal .chart-wrap { height: min(57vh, 600px); }
@@ -221,6 +224,9 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 .decision-history-note { font-size: 13px; color: var(--text); margin-bottom: 3px; }
 .decision-limitations, .decision-basis-note { color: var(--muted); font-size: 13px; line-height: 1.65; margin-top: 12px; }
 .score-panel { align-self: stretch; display: flex; flex-direction: column; gap: 12px; }
+.availability-card table { min-width: 960px; }
+.availability-card td:first-child { min-width: 150px; }
+.availability-card td:last-child { min-width: 340px; }
 .score-list { display: grid; gap: 11px; }
 .score { display: grid; grid-template-columns: 1fr auto; gap: 1px 8px; align-items: center; }
 .score h4 { font-size: 13px; font-weight: 750; }

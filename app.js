@@ -1,7 +1,8 @@
 import { badge, byId, create, direction, empty, koreaDate, quantity, signed, sourceLink, timestamp, toDay, valid } from "./ui/dom.mjs";
 import { chartCard, clearSharedDate, destroyPlots } from "./ui/charts.mjs";
 import { renderEtf } from "./ui/etf.mjs";
-import { CREDIT, FLOWS, FX, HEADLINES, PAGES, SCORE_LABELS, comparisonLabel, fetchData, flowLine, loadOriginalData, selectIndex } from "./ui/market.mjs";
+import { renderAvailability } from "./ui/availability.mjs";
+import { CREDIT, FLOWS, FX, HEADLINES, PAGES, SCORE_LABELS, comparisonLabel, fetchData, flowLine, loadOriginalData, selectFlow, selectIndex } from "./ui/market.mjs";
 import { renderBacktest, renderConclusion, renderContributors, renderCorrelations, renderMetrics, renderScores, renderSeriesTable, renderStatus } from "./ui/research-view.mjs";
 
 const presets = { "1M": 1, "3M": 3, "6M": 6, "1Y": 12, "3Y": 36, "5Y": 60, "10Y": 120, ALL: null };
@@ -46,6 +47,7 @@ function findSeries(id) {
   let selected = id;
   if (id === "kospi") selected = research?.benchmark?.id || selectIndex(dashboard, id);
   if (id === "kosdaq") selected = selectIndex(dashboard, id);
+  if (FLOWS.includes(id)) selected = selectFlow(dashboard, id);
   return dashboard.series[selected] || dashboard.series[id];
 }
 
@@ -117,7 +119,7 @@ function normalizeChartSpec(spec) {
 }
 
 function chart(spec) {
-  const view = { range: state.range, indexed: state.indexed };
+  const view = { range: state.range, bounds: state.bounds, indexed: state.indexed };
   return chartCard(normalizeChartSpec(spec), {
     view, technical: state.analytics, dialog: openDialog, onZoom: applyCustomRange,
   });
@@ -164,14 +166,22 @@ function flows() {
   const turnoverIds = ["kospi_turnover", "kosdaq_turnover"];
   const capIds = ["kospi_marketcap", "kosdaq_marketcap"];
   const foreignEcos = ["foreign_net_ecos", "foreign_net_kospi", "foreign_net_kosdaq"].filter((id) => findSeries(id));
+  const selectedFlows = FLOWS.map((id) => selectFlow(state.dashboard, id));
+  const monthlyFlows = ["institution_net_monthly", "individual_net_monthly", "foreign_net_monthly"];
   return [
+    renderAvailability("수급 자료의 실제 기준일", selectedFlows, state.dashboard, {
+      message: "외국인은 정의가 같은 원천 중 최근 자료를 선택합니다. 기관·개인 일별 수급은 새 공개 원천이 연결되기 전까지 기존 날짜를 유지합니다. 월별 공표 자료는 아래에서 별도로 확인할 수 있습니다.",
+    }),
     chart(spec("flow-daily", "일별 순매수", FLOWS, { allowIndexed: false, subtitle: "코스피+코스닥 합산" })),
     chart(spec("flow-cumulative", "조회 구간 누적 순매수", FLOWS, { cumulative: true, subtitle: "코스피+코스닥 합산" })),
     panel,
     chart(spec("flow-rolling", width + "거래일 이동 누적 순매수", FLOWS, { points, allowIndexed: false, subtitle: "코스피+코스닥 합산" })),
     chart(spec("flow-turnover", "시장별 거래대금", turnoverIds)),
     foreignEcos.length ? chart(spec("flow-ecos", "외국인 순매수 · ECOS", foreignEcos, { allowIndexed: false, span: "span-12" })) : null,
-    renderSeriesTable("수급·거래 자료", [...FLOWS, ...foreignEcos, ...turnoverIds, ...capIds], state.dashboard),
+    chart(spec("flow-monthly", "투자자별 월별 순매수 · ECOS", monthlyFlows, { allowIndexed: false, span: "span-12",
+      subtitle: "월별 거래대금 · 일별 차트와 별도 공표 범위",
+      footnote: "관측일은 보고월 말일입니다. ECOS 공표 범위의 월간 합계이며, 일별 수급이나 코스피·코스닥 합산 수급으로 이어 붙이지 않습니다." })),
+    renderSeriesTable("수급·거래 자료", [...foreignEcos, ...monthlyFlows, ...turnoverIds, ...capIds], state.dashboard),
     renderMetrics("수급 분포", state.research?.features || [],
       ["foreign20", "institution20", "individual20", "foreign20Turnover", "institution20Turnover"]),
   ];
@@ -193,12 +203,17 @@ function breadth() {
   const counts = ["advancers", "decliners", "new_high52", "new_low52"];
   const average = ["above_ma20", "above_ma60", "above_ma120", "above_ma200"];
   const indices = ["equal_weight", "large_cap", "small_cap"];
+  const cards = [
+    ["breadth-advance", "상승·하락 종목 수", counts.slice(0, 2)],
+    ["breadth-high-low", "52주 신고가·신저가", counts.slice(2)],
+    ["breadth-ma", "이동평균 상회 비율", average],
+    ["breadth-index", "동일가중·규모별 지수", indices],
+  ];
   return [
-    chart(spec("breadth-advance", "상승·하락 종목 수", counts.slice(0, 2))),
-    chart(spec("breadth-high-low", "52주 신고가·신저가", counts.slice(2))),
-    chart(spec("breadth-ma", "이동평균 상회 비율", average)),
-    chart(spec("breadth-index", "동일가중·규모별 지수", indices)),
-    renderSeriesTable("시장확산도 자료", [...counts, ...average, ...indices], state.dashboard),
+    renderAvailability("시장확산도 · 연결에 필요한 자료", [...counts, ...average, ...indices], state.dashboard, {
+      message: "현재 공개 사이트에는 종목별 원자료가 연결되지 않았습니다. 상승·하락 종목 수는 전종목 시세가, 이동평균 상회 비율과 신고가·신저가는 당시 상장 목록과 수정주가 이력이 필요합니다. API 이용 승인과 공개 재배포 허용 범위는 별도입니다. 원자료가 연결되면 아래 지표를 계산해 표시합니다.",
+    }),
+    ...cards.filter(([, , ids]) => ids.some((id) => findSeries(id)?.points?.length)).map(([key, title, ids]) => chart(spec(key, title, ids))),
   ];
 }
 
@@ -228,10 +243,21 @@ function derivatives() {
   const monthlyFutures = "index_futures_volume_monthly";
   const monthlyOptions = ["index_option_call_volume_monthly", "index_option_put_volume_monthly"];
   const monthlyPcr = "index_option_volume_pcr_monthly";
+  const dailyIds = [...price, ...oi, ...options, "vkospi", ...program];
+  const dailyCards = [
+    ["derivatives-price", "코스피 200 현물과 선물", price],
+    ["derivatives-oi", "선물 거래량·미결제약정·외국인 순매수", oi],
+    ["derivatives-oi-options", "콜·풋 미결제약정", options.slice(0, 2)],
+    ["derivatives-vol-options", "콜·풋 거래량", options.slice(2)],
+    ["derivatives-vix", "VKOSPI", ["vkospi"]],
+    ["derivatives-program", "프로그램 차익 · 비차익 순매수", program],
+  ];
+  const monthlyAverages = ["index_futures_daily_average_monthly", "index_option_call_daily_average_monthly", "index_option_put_daily_average_monthly"];
+  const monthlyAmounts = ["index_option_call_turnover_monthly", "index_option_put_turnover_monthly"];
   const monthlyVolume = {
     span: "span-4",
     subtitle: "ECOS 월별 체결 계약 수 · 만기 구분 없이 공표",
-    footnote: "관측일은 보고월 말일입니다. 미결제약정은 별도 항목에서 확인할 수 있습니다.",
+    footnote: "관측일은 보고월 말일입니다. 미결제약정과 투자자 포지션을 뜻하지 않습니다.",
   };
   return [
     chart(spec("derivatives-monthly-futures", "월별 주가지수선물 거래량", [monthlyFutures], monthlyVolume)),
@@ -241,14 +267,20 @@ function derivatives() {
       subtitle: "같은 달 풋 체결 계약 수 ÷ 콜 체결 계약 수",
       footnote: "관측일은 보고월 말일입니다. 월별 합계는 만기 구분 없이 공표됩니다.",
     })),
-    renderSeriesTable("주가지수선물·옵션 월별 거래량", [monthlyFutures, ...monthlyOptions, monthlyPcr], state.dashboard),
-    chart(spec("derivatives-price", "코스피 200 현물과 선물", price)),
-    chart(spec("derivatives-oi", "선물 거래량·미결제약정·외국인 순매수", oi)),
-    chart(spec("derivatives-oi-options", "콜·풋 미결제약정", options.slice(0, 2))),
-    chart(spec("derivatives-vol-options", "콜·풋 거래량", options.slice(2))),
-    chart(spec("derivatives-vix", "VKOSPI", ["vkospi"])),
-    chart(spec("derivatives-program", "프로그램 차익 · 비차익 순매수", program, { allowIndexed: false })),
-    renderSeriesTable("선물·옵션 자료", [...price, ...oi, ...options, "vkospi", ...program], state.dashboard),
+    chart(spec("derivatives-monthly-average", "거래일당 평균 거래량 · 월별 공표", monthlyAverages, {
+      allowIndexed: false, subtitle: "각 보고월의 일평균 계약 수 · 일별 관측 시계열이 아닙니다." })),
+    chart(spec("derivatives-monthly-amounts", "옵션 콜·풋 거래대금 · 월", monthlyAmounts, {
+      allowIndexed: false, subtitle: "체결된 옵션 거래대금 · 선물 명목 계약금액과 별도" })),
+    chart(spec("derivatives-monthly-notional", "선물 계약금액 · 월", ["index_futures_notional_monthly"], {
+      subtitle: "명목 계약금액 · 실제 유입 자금이나 순매수 금액이 아닙니다." })),
+    chart(spec("derivatives-monthly-amount-pcr", "옵션 거래대금 풋/콜 · 월", ["index_option_turnover_pcr_monthly"], {
+      allowIndexed: false, subtitle: "같은 달 풋 거래대금 ÷ 콜 거래대금 · 계약 수 기준 PCR과 별도" })),
+    renderSeriesTable("선물·옵션 월별 공표 자료", [monthlyFutures, ...monthlyOptions, monthlyPcr, ...monthlyAverages,
+      ...monthlyAmounts, "index_futures_notional_monthly", "index_option_turnover_pcr_monthly"], state.dashboard),
+    renderAvailability("일별 선물·옵션 · 연결 상태", dailyIds, state.dashboard, {
+      message: "일별 미결제약정·투자자 포지션·VKOSPI에는 공개 제공이 허용된 별도 원천이 필요합니다. 위의 월별 거래 통계로 대신 계산하지 않습니다. 각 항목의 원천과 필요한 자료를 아래에 표시합니다.",
+    }),
+    ...dailyCards.filter(([, , ids]) => ids.some((id) => findSeries(id)?.points?.length)).map(([key, title, ids]) => chart(spec(key, title, ids, { allowIndexed: false }))),
   ];
 }
 
@@ -327,7 +359,7 @@ function selectRange(id) {
   renderView();
 }
 
-function applyCustomRange(from, to) {
+function applyCustomRange(from, to, options = {}) {
   if (!state.bounds || from > to || !valid(toDay(from)) || !valid(toDay(to))) return;
   const f = from < state.bounds.from ? state.bounds.from : from;
   const t = to > state.bounds.to ? state.bounds.to : to;
@@ -336,7 +368,8 @@ function applyCustomRange(from, to) {
   state.range = { from: f, to: t };
   byId("date-form").hidden = true;
   byId("range-edit").setAttribute("aria-expanded", "false");
-  renderView();
+  if (options.interactive) renderRangeControls();
+  else renderView();
 }
 
 function renderRangeControls() {
@@ -438,7 +471,7 @@ function renderMethods() {
     create("h3", { text: "관측일과 데이터 가용성" }),
     create("p", { text: "시장 수치는 일별 계열의 최근 관측값입니다. 지수는 출처 하나의 이력을 사용합니다. 관측일, 시도 시각, 출처와 라이선스는 데이터 상태에서 확인할 수 있습니다." }),
     create("h3", { text: "차트 조작" }),
-    create("p", { text: "차트에 마우스를 올리거나 초점을 둔 채 방향키를 눌러 공통 날짜를 비교할 수 있습니다. 드래그 확대를 켜고 차트에서 구간을 선택하면 조회 기간이 바뀝니다. 기준 100은 사용 가능한 첫 값을 100으로 환산합니다." }),
+    create("p", { text: "차트를 클릭하거나 휠·터치 확대 버튼을 켜면 휠 또는 두 손가락으로 확대·축소합니다. +/− 키와 Home(해당 차트 전체 기간)을 지원하며 Esc로 해제합니다. 조회 기간은 다른 차트에도 반영됩니다. 기본 상태에서는 페이지를 스크롤합니다. 기준 100은 사용 가능한 첫 값을 100으로 환산합니다." }),
     create("h3", { text: "점수와 백테스트" }),
     create("p", { text: "점수는 확보된 지표의 과거 분포와 가중치를 이용한 시장 관측값입니다. 백테스트의 표본 수, 가용시점 가정, 불확실성 범위는 백테스트 메뉴에 있습니다." }),
     ...(Array.isArray(notes) ? notes.filter((note) => typeof note === "string").map((note) => create("p", {

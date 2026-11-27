@@ -1,0 +1,64 @@
+name: Retry a missed daily collection
+on:
+  schedule:
+    - cron: "47 13 * * *" # KST 22:47
+  workflow_dispatch: {}
+permissions:
+  contents: read
+  actions: write
+concurrency:
+  group: market-refresh-watchdog
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check the last recorded collection
+        id: freshness
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if ! timeout 30s gh api "repos/$REPOSITORY/contents/data/dashboard.json" \
+            --method GET -f ref="$DEFAULT_BRANCH" -H 'Accept: application/vnd.github.raw+json' \
+            > "$RUNNER_TEMP/market-refresh.json" 2> "$RUNNER_TEMP/market-refresh-fetch-error.txt"; then
+            echo '{}' > "$RUNNER_TEMP/market-refresh.json"
+            echo '::warning::Latest collection metadata could not be fetched; freshness is unknown.'
+          fi
+          python scripts/check_refresh.py "$RUNNER_TEMP/market-refresh.json" --github-output "$GITHUB_OUTPUT"
+      - name: Check whether the daily collector is already active
+        id: collector
+        if: steps.freshness.outputs.needs_retry == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if ! timeout 30s gh api "repos/$REPOSITORY/actions/workflows/daily-update.yml/runs" \
+            --method GET -f branch="$DEFAULT_BRANCH" -f per_page=100 \
+            > "$RUNNER_TEMP/market-collector-runs.json" 2> "$RUNNER_TEMP/market-collector-fetch-error.txt"; then
+            echo '::error::Collector status could not be fetched; no duplicate run was dispatched.'
+            exit 1
+          fi
+          python scripts/check_refresh.py "$RUNNER_TEMP/market-collector-runs.json" --check-runs --github-output "$GITHUB_OUTPUT"
+      - name: Retry the existing daily collector
+        if: steps.freshness.outputs.needs_retry == 'true' && steps.collector.outputs.can_dispatch == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if ! timeout 30s gh workflow run daily-update.yml --repo "$REPOSITORY" --ref "$DEFAULT_BRANCH" \
+            > "$RUNNER_TEMP/market-dispatch-result.txt" 2> "$RUNNER_TEMP/market-dispatch-error.txt"; then
+            echo '::error::The dispatch request failed or timed out; its outcome is unconfirmed and it was not repeated.'
+            exit 1
+          fi
+          echo 'A required source attempt was missing or had a transient failure. Dispatched one retry of the daily collector.' >> "$GITHUB_STEP_SUMMARY"

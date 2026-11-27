@@ -16,6 +16,7 @@ from requests.adapters import HTTPAdapter, Retry
 from data_pipeline import (
     ROOT, Dashboard, CollectionError, REGISTRY, finite_number, period_end,
 )
+from derivatives import ECOS_DERIVATIVE_SERIES, ECOS_DERIVATIVE_UNITS, derive_monthly_turnover_pcr
 
 
 ECOS_URL = "https://ecos.bok.or.kr/api/StatisticSearch"
@@ -49,7 +50,11 @@ ECOS_SERIES = {
     "index_futures_volume_monthly": ("901Y057", "S25A", 1),
     "index_option_call_volume_monthly": ("901Y058", "S26BA", 1),
     "index_option_put_volume_monthly": ("901Y058", "S26CA", 1),
+    "institution_net_monthly": ("901Y055", "S22CA", 100, "VA"),
+    "individual_net_monthly": ("901Y055", "S22CB", 100, "VA"),
+    "foreign_net_monthly": ("901Y055", "S22CC", 100, "VA"),
 }
+ECOS_SERIES.update(ECOS_DERIVATIVE_SERIES)
 
 FRED_SERIES = {"us2y": "DGS2", "us10y": "DGS10", "usd_broad": "DTWEXBGS"}
 KOFIA_SERIES = {
@@ -123,7 +128,7 @@ def number_or_missing(raw_value):
 def ecos_observations(client, key, token, start, end):
     if not token:
         raise CollectionError("missing_key", "ECOS 수집용 인증 설정이 필요합니다.")
-    table, item, divisor = ECOS_SERIES[key]
+    table, item, divisor, *dimensions = ECOS_SERIES[key]
     frequency = REGISTRY[key].frequency
     cycle = {"daily": "D", "monthly": "M", "quarterly": "Q"}[frequency]
     start_key, end_key = period_key(start, frequency), period_key(end, frequency)
@@ -131,6 +136,8 @@ def ecos_observations(client, key, token, start, end):
         f"{ECOS_URL}/{token}/json/kr/1/10000/{table}/{cycle}/"
         f"{start_key}/{end_key}/{item}"
     )
+    if dimensions:
+        url += "/" + "/".join(dimensions)
     payload = package_json(client.get(f"ecos-{key}", url))
     if "RESULT" in payload:
         code = payload["RESULT"].get("CODE")
@@ -148,6 +155,10 @@ def ecos_observations(client, key, token, start, end):
                       "index_futures_volume_monthly": "계약",
                       "index_option_call_volume_monthly": "계약",
                       "index_option_put_volume_monthly": "계약"}
+    accepted_units.update(ECOS_DERIVATIVE_UNITS)
+    accepted_units.update({key: "백만원" for key in (
+        "institution_net_monthly", "individual_net_monthly", "foreign_net_monthly",
+    )})
     expected_unit = accepted_units.get(key)
     if expected_unit is None and REGISTRY[key].unit in {"원", "억원", "%"}:
         expected_unit = "연%" if REGISTRY[key].unit == "%" else REGISTRY[key].unit
@@ -156,6 +167,8 @@ def ecos_observations(client, key, token, start, end):
     for row in result["row"]:
         if row.get("STAT_CODE") != table or row.get("ITEM_CODE1") != item:
             raise CollectionError("unexpected_series", "요청한 ECOS 통계표와 응답 항목이 일치하지 않습니다.")
+        if any(row.get(f"ITEM_CODE{index}") != code for index, code in enumerate(dimensions, 2)):
+            raise CollectionError("unexpected_series", "요청한 ECOS 거래대금·거래량 구분과 응답 항목이 일치하지 않습니다.")
         if expected_unit and (row.get("UNIT_NAME") or "").strip().replace(" ", "") != expected_unit:
             raise CollectionError("unexpected_unit", "ECOS 원자료의 단위가 등록된 단위와 일치하지 않습니다.")
         raw_date = row["TIME"]
@@ -354,6 +367,7 @@ def main():
     dashboard.combine("kr_credit_spread", "kr_aa3y", "kr3y", basis_points)
     dashboard.combine("kr_us10y_spread", "kr10y", "us10y", basis_points)
     dashboard.combine("index_option_volume_pcr_monthly", "index_option_put_volume_monthly", "index_option_call_volume_monthly", lambda put, call: put / call if call > 0 else float("nan"))
+    derive_monthly_turnover_pcr(dashboard)
     data = dashboard.write()
     for key in sorted(dashboard.failed_keys):
         print(f"::warning title={key}::{dashboard.diagnostics[key]['code']}")

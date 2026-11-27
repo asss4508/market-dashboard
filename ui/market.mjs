@@ -102,6 +102,15 @@ export function selectIndex(dashboard, prefix) {
   return candidates.sort((a, b) => (b.asOf || "").localeCompare(a.asOf || "") || b.points.length - a.points.length)[0]?.id || prefix;
 }
 
+// Choose one complete, definition-compatible source. Do not splice old and new feeds.
+export function selectFlow(dashboard, id) {
+  if (!FLOWS.includes(id)) return id;
+  const variants = [id, id + "_ecos"].map((key) => dashboard.series[key])
+    .filter((line) => line?.points?.length && line.unit === "억원" && line.scope === "코스피+코스닥" && line.frequency === "daily");
+  return variants.sort((a, b) => b.points.at(-1).date.localeCompare(a.points.at(-1).date)
+    || b.points.length - a.points.length)[0]?.id || id;
+}
+
 export function flowLine(line, length, cumulative = false) {
   if (!line?.points?.length) return [];
   let total = 0;

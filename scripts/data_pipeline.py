@@ -5,9 +5,11 @@ import json
 import math
 import os
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+
+from derivatives import DERIVATIVE_INDICATORS, DERIVATIVE_LIMITATIONS
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -111,6 +113,12 @@ REGISTRY = {
     "foreign_net_kospi": Indicator("코스피 외국인 순매수", "투자자 수급", "억원", "코스피", "ECOS 유가증권시장 외국인 순매수대금", ECOS_MARKET),
     "foreign_net_kosdaq": Indicator("코스닥 외국인 순매수", "투자자 수급", "억원", "코스닥", "ECOS 코스닥시장 외국인 순매수대금", ECOS_MARKET),
     "foreign_net_ecos": Indicator("외국인 순매수", "투자자 수급", "억원", "코스피+코스닥", "동일 거래일 ECOS 유가증권 및 코스닥시장 외국인 순매수대금 합계", ECOS_MARKET),
+    "institution_net_monthly": Indicator("기관 순매수 · 월", "투자자 수급", "억원", "ECOS 투자자별 주식거래 공표 범위", "ECOS 901Y055 기관투자자 순매수(S22CA), 거래대금(VA), 백만원을 억원으로 변환", ECOS_MARKET, "monthly", 45,
+        "월별 공표 거래대금입니다. 양 시장 합산 일별 수급과 시장 범위가 같다고 확인되지 않아 일별 이력·점수에 이어 붙이지 않습니다."),
+    "individual_net_monthly": Indicator("개인 순매수 · 월", "투자자 수급", "억원", "ECOS 투자자별 주식거래 공표 범위", "ECOS 901Y055 개인 순매수(S22CB), 거래대금(VA), 백만원을 억원으로 변환", ECOS_MARKET, "monthly", 45,
+        "월별 공표 거래대금입니다. 양 시장 합산 일별 수급과 시장 범위가 같다고 확인되지 않아 일별 이력·점수에 이어 붙이지 않습니다."),
+    "foreign_net_monthly": Indicator("외국인 순매수 · 월", "투자자 수급", "억원", "ECOS 투자자별 주식거래 공표 범위", "ECOS 901Y055 외국인 순매수(S22CC), 거래대금(VA), 백만원을 억원으로 변환", ECOS_MARKET, "monthly", 45,
+        "월별 공표 외국인 항목이며 기타외국인은 별도 분류입니다. 양 시장 합산 일별 외국인 수급과 이어 붙이지 않습니다."),
     "kospi_turnover": Indicator("코스피 거래대금", "투자자 수급", "억원", "코스피", "ECOS 유가증권시장 일별 주식 거래대금", ECOS_MARKET),
     "kosdaq_turnover": Indicator("코스닥 거래대금", "투자자 수급", "억원", "코스닥", "ECOS 코스닥시장 일별 주식 거래대금", ECOS_MARKET),
     "kospi_marketcap": Indicator("코스피 시가총액", "국내 지수", "억원", "코스피", "ECOS 유가증권시장 일별 시가총액", ECOS_MARKET),
@@ -153,6 +161,49 @@ for identifier, label, category, unit, scope, definition, limitation in (
     ("option_put_volume", "풋옵션 거래량", "파생상품", "계약", "코스피 200 옵션", "풋옵션 일별 체결 계약 수", NEEDS_SOURCE),
 ):
     REGISTRY[identifier] = Indicator(label, category, unit, scope, definition, KRX, limitation=limitation)
+
+REGISTRY.update({
+    key: Indicator(category="선물옵션", source=ECOS_MARKET, frequency="monthly", expected_lag=45, **fields)
+    for key, fields in DERIVATIVE_INDICATORS.items()
+})
+NONNEGATIVE_SERIES.update(DERIVATIVE_INDICATORS)
+for key, limitation in DERIVATIVE_LIMITATIONS.items():
+    REGISTRY[key] = replace(REGISTRY[key], limitation=limitation)
+
+# Requirements differ by indicator. An unavailable advance/decline snapshot
+# does not imply that a 200-session adjusted-price history is needed for it.
+for key in ("advancers", "decliners"):
+    REGISTRY[key] = replace(REGISTRY[key], limitation=(
+        "해당 거래일의 전종목 전일대비 값과 보통주 종목구분이 필요합니다. "
+        "기준일·대상 종목 수·완전성이 검증된 공개 이용 가능 스냅샷부터 누적할 수 있습니다. "
+        "현재 원천이 연결되지 않아 집계하지 않았습니다."
+    ))
+for key in ("new_high52", "new_low52"):
+    REGISTRY[key] = replace(REGISTRY[key], limitation=(
+        "거래일별 보통주 목록과 분할·병합 등을 반영한 52주 수정주가 이력이 필요합니다. "
+        "현재 종목 목록을 과거에 소급하거나 지수 신고가로 대체하지 않습니다."
+    ))
+for length in (20, 60, 120, 200):
+    key = f"above_ma{length}"
+    REGISTRY[key] = replace(REGISTRY[key], limitation=(
+        f"해당일 보통주 목록과 종목별 {length}거래일 수정주가가 필요합니다. "
+        "자료가 충분한 종목 수와 전체 대상 수를 확인해야 하며, 누락 종목을 하락·보합으로 채우지 않습니다. "
+        "현재 공개 이용 가능한 전종목 이력이 연결되지 않았습니다."
+    ))
+REGISTRY["equal_weight"] = replace(REGISTRY["equal_weight"], limitation=(
+    "시점별 편입 종목·수정주가와 동일가중 재조정 기준이 필요합니다. "
+    "현재 상장 종목만 과거에 적용하거나 시가총액가중 지수를 동일가중으로 표시하지 않습니다."
+))
+for key in ("large_cap", "small_cap"):
+    REGISTRY[key] = replace(REGISTRY[key], limitation=(
+        "같은 지수 체계의 규모별 지수와 공개 이용 가능한 이력이 필요합니다. "
+        "연결된 ECOS 주식시장 일·월 통계에는 해당 규모별 지수가 없어 코스피·코스닥으로 대체하지 않습니다."
+    ))
+for key in ("institution_net", "individual_net"):
+    REGISTRY[key] = replace(REGISTRY[key], limitation=(
+        "기존 보관 일별 이력을 유지합니다. ECOS 일별 주식시장 통계에는 이 투자자 구분이 없어 "
+        "새 일별 관측을 연결하지 못했습니다. ECOS 월별 공표 수급은 별도 계열로 제공합니다."
+    ))
 
 
 LEGACY_FILES = {
