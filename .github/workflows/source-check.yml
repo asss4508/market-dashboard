@@ -3,10 +3,14 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: "Select read-only diagnostic"
+        description: "Select diagnostic"
         type: choice
         options: [kofia, krx]
         default: kofia
+      resume_session:
+        description: "Allow one KRX duplicate-session resume (may replace a previous login)"
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -30,9 +34,15 @@ jobs:
         env:
           DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
         run: python scripts/diagnose_kofia.py
-      - name: Verify one KRX login without exposing credentials
+      - name: Verify bounded KRX login without exposing credentials
         if: inputs.target == 'krx'
         env:
           KRX_ID: ${{ secrets.KRX_ID }}
           KRX_PW: ${{ secrets.KRX_PW }}
-        run: python scripts/check_krx_connection.py --strict
+          RESUME_SESSION: ${{ inputs.resume_session }}
+        run: |
+          if [ "$RESUME_SESSION" = "true" ]; then
+            python scripts/check_krx_connection.py --strict --resume-session
+          else
+            python scripts/check_krx_connection.py --strict
+          fi

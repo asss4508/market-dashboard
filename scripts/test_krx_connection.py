@@ -5,10 +5,15 @@ from contextlib import redirect_stdout
 from types import SimpleNamespace
 from unittest.mock import patch, Mock
 
-from check_krx_connection import classify_response, try_login, main
+from check_krx_connection import classify_response, try_login, main, end_diagnostic_session
 
 
 class SafeLoginTest(unittest.TestCase):
+    def setUp(self):
+        cleanup = patch('check_krx_connection.end_diagnostic_session')
+        self.cleanup_mock = cleanup.start()
+        self.addCleanup(cleanup.stop)
+
     def test_code_does_not_prove_password_change(self):
         safe, failure = classify_response({'_error_code': 'CD010'})
         self.assertEqual(failure, 'login_rejected')
@@ -59,7 +64,7 @@ class SafeLoginTest(unittest.TestCase):
                 self.assertNotIn('fixture', json.dumps(diagnostic))
 
     def test_main_suppresses_library_output_and_sets_strict_exit_status(self):
-        def fake_report():
+        def fake_report(**kwargs):
             print('fixture-person fixture-secret')
             return {'loginSucceeded': False, 'failure': 'login_rejected'}
         output = io.StringIO()
@@ -70,6 +75,58 @@ class SafeLoginTest(unittest.TestCase):
         self.assertEqual(raised.exception.code, 1)
         self.assertNotIn('fixture', output.getvalue())
         self.assertEqual(json.loads(output.getvalue())['failure'], 'login_rejected')
+
+    def test_optional_resume_only_retries_duplicate_and_caps_requests(self):
+        for codes, failure, count in ((['CD011', 'CD001'], None, 2),
+                                     (['CD011', 'CD011'], 'duplicate_session', 2),
+                                     (['CD010'], 'login_rejected', 1),
+                                     (['CD001'], None, 1)):
+            with self.subTest(codes=codes):
+                replies = []
+                for code in codes:
+                    response = Mock(status_code=200)
+                    response.json.return_value = {'_error_code': code}
+                    replies.append(response)
+                def official_login(identifier, password, session):
+                    payload = {'mbrId': identifier, 'pw': password}
+                    response = session.post('https://data.krx.co.kr/login', data=payload)
+                    if response.json()['_error_code'] == 'CD011':
+                        payload['skipDup'] = 'Y'
+                        response = session.post('https://data.krx.co.kr/login', data=payload)
+                    return response.json()['_error_code'] == 'CD001'
+                diagnostic = {}
+                with patch('check_krx_connection.load_auth', return_value=SimpleNamespace(login_krx=official_login)), \
+                     patch('requests.Session.post', side_effect=replies) as post:
+                    actual = try_login(None, 'fixture-person', 'fixture-secret', diagnostic, resume_session=True)
+                self.assertEqual(actual, failure)
+                self.assertEqual(post.call_count, count)
+                self.assertEqual(diagnostic['serverCodes'], codes)
+                self.assertNotIn('fixture', json.dumps(diagnostic))
+
+    def test_resume_cannot_send_credentials_to_a_different_endpoint(self):
+        response = Mock(status_code=200)
+        response.json.return_value = {'_error_code': 'CD011'}
+        def login(identifier, password, session):
+            data = {'mbrId': identifier, 'pw': password}
+            session.post('https://data.krx.co.kr/login', data=data)
+            session.post('https://unexpected.invalid/login', data={**data, 'skipDup': 'Y'})
+        with patch('check_krx_connection.load_auth', return_value=SimpleNamespace(login_krx=login)), \
+             patch('requests.Session.post', return_value=response) as post:
+            failure = try_login(None, 'fixture-person', 'fixture-secret', resume_session=True)
+        self.assertEqual(post.call_count, 1)
+        self.assertEqual(failure, 'additional_login_required')
+
+    def test_cleanup_uses_current_session_without_credential_fields(self):
+        session = Mock()
+        auth = SimpleNamespace(USER_AGENT='fixture-agent', LOGIN_PAGE='https://data.krx.co.kr/login')
+        diagnostic = {}
+        with patch('requests.Session.post', return_value=Mock(status_code=200)) as post:
+            end_diagnostic_session(session, auth, diagnostic)
+        self.assertIs(post.call_args.args[0], session)
+        self.assertEqual(post.call_args.args[1], 'https://data.krx.co.kr/contents/MDC/MAIN/main/removeSession.cmd')
+        self.assertFalse(post.call_args.kwargs['allow_redirects'])
+        self.assertNotIn('data', post.call_args.kwargs)
+        self.assertEqual(diagnostic['sessionCleanupStatus'], 'request_succeeded')
 
 
 if __name__ == '__main__':
