@@ -1,0 +1,521 @@
+{
+  "date": "2026-11-27",
+  "collectedAt": "2026-11-27T08:44:56+09:00",
+  "complete": true,
+  "totalRows": 64,
+  "revisionHash": "03c1c1d293fb7179d2b986a002bf5b74f47073c7bee000fb4e8cae121cb5da52",
+  "holdings": [
+    {
+      "code": "005160",
+      "name": "동국산업",
+      "quantity": 98.0,
+      "marketValue": 270970.0,
+      "weightPct": 0.47,
+      "assetType": "security"
+    },
+    {
+      "code": "006730",
+      "name": "서부T&D",
+      "quantity": 25.0,
+      "marketValue": 233500.0,
+      "weightPct": 0.4,
+      "assetType": "security"
+    },
+    {
+      "code": "014620",
+      "name": "성광벤드",
+      "quantity": 21.0,
+      "marketValue": 359100.0,
+      "weightPct": 0.62,
+      "assetType": "security"
+    },
+    {
+      "code": "030530",
+      "name": "원익홀딩스",
+      "quantity": 38.0,
+      "marketValue": 1043100.0,
+      "weightPct": 1.8,
+      "assetType": "security"
+    },
+    {
+      "code": "031980",
+      "name": "피에스케이홀딩스",
+      "quantity": 4.0,
+      "marketValue": 468800.0,
+      "weightPct": 0.81,
+      "assetType": "security"
+    },
+    {
+      "code": "032500",
+      "name": "케이엠더블유",
+      "quantity": 45.0,
+      "marketValue": 949500.0,
+      "weightPct": 1.64,
+      "assetType": "security"
+    },
+    {
+      "code": "033790",
+      "name": "피노",
+      "quantity": 173.0,
+      "marketValue": 1141800.0,
+      "weightPct": 1.97,
+      "assetType": "security"
+    },
+    {
+      "code": "036540",
+      "name": "SFA반도체",
+      "quantity": 147.0,
+      "marketValue": 1202460.0,
+      "weightPct": 2.08,
+      "assetType": "security"
+    },
+    {
+      "code": "039030",
+      "name": "이오테크닉스",
+      "quantity": 1.0,
+      "marketValue": 286000.0,
+      "weightPct": 0.49,
+      "assetType": "security"
+    },
+    {
+      "code": "058470",
+      "name": "리노공업",
+      "quantity": 5.0,
+      "marketValue": 233750.0,
+      "weightPct": 0.4,
+      "assetType": "security"
+    },
+    {
+      "code": "064290",
+      "name": "인텍플러스",
+      "quantity": 12.0,
+      "marketValue": 426600.0,
+      "weightPct": 0.74,
+      "assetType": "security"
+    },
+    {
+      "code": "073490",
+      "name": "LIG아큐버",
+      "quantity": 26.0,
+      "marketValue": 1024400.0,
+      "weightPct": 1.77,
+      "assetType": "security"
+    },
+    {
+      "code": "077360",
+      "name": "덕산하이메탈",
+      "quantity": 21.0,
+      "marketValue": 137760.0,
+      "weightPct": 0.24,
+      "assetType": "security"
+    },
+    {
+      "code": "078350",
+      "name": "한양디지텍",
+      "quantity": 23.0,
+      "marketValue": 447350.0,
+      "weightPct": 0.77,
+      "assetType": "security"
+    },
+    {
+      "code": "078600",
+      "name": "대주전자재료",
+      "quantity": 7.0,
+      "marketValue": 613200.0,
+      "weightPct": 1.06,
+      "assetType": "security"
+    },
+    {
+      "code": "086450",
+      "name": "동국제약",
+      "quantity": 22.0,
+      "marketValue": 562100.0,
+      "weightPct": 0.97,
+      "assetType": "security"
+    },
+    {
+      "code": "089890",
+      "name": "코세스",
+      "quantity": 90.0,
+      "marketValue": 3181500.0,
+      "weightPct": 5.49,
+      "assetType": "security"
+    },
+    {
+      "code": "089970",
+      "name": "브이엠",
+      "quantity": 5.0,
+      "marketValue": 168250.0,
+      "weightPct": 0.29,
+      "assetType": "security"
+    },
+    {
+      "code": "095340",
+      "name": "ISC",
+      "quantity": 11.0,
+      "marketValue": 1284800.0,
+      "weightPct": 2.22,
+      "assetType": "security"
+    },
+    {
+      "code": "095610",
+      "name": "테스",
+      "quantity": 3.0,
+      "marketValue": 235800.0,
+      "weightPct": 0.41,
+      "assetType": "security"
+    },
+    {
+      "code": "098460",
+      "name": "고영",
+      "quantity": 15.0,
+      "marketValue": 327000.0,
+      "weightPct": 0.56,
+      "assetType": "security"
+    },
+    {
+      "code": "107640",
+      "name": "한중엔시에스",
+      "quantity": 7.0,
+      "marketValue": 214550.0,
+      "weightPct": 0.37,
+      "assetType": "security"
+    },
+    {
+      "code": "108490",
+      "name": "로보티즈",
+      "quantity": 8.0,
+      "marketValue": 2244000.0,
+      "weightPct": 3.87,
+      "assetType": "security"
+    },
+    {
+      "code": "121600",
+      "name": "나노신소재",
+      "quantity": 15.0,
+      "marketValue": 985500.0,
+      "weightPct": 1.7,
+      "assetType": "security"
+    },
+    {
+      "code": "122640",
+      "name": "예스티",
+      "quantity": 36.0,
+      "marketValue": 819000.0,
+      "weightPct": 1.41,
+      "assetType": "security"
+    },
+    {
+      "code": "131290",
+      "name": "티에스이",
+      "quantity": 3.0,
+      "marketValue": 453300.0,
+      "weightPct": 0.78,
+      "assetType": "security"
+    },
+    {
+      "code": "141080",
+      "name": "리가켐바이오",
+      "quantity": 9.0,
+      "marketValue": 510300.0,
+      "weightPct": 0.88,
+      "assetType": "security"
+    },
+    {
+      "code": "144960",
+      "name": "뉴파워프라즈마",
+      "quantity": 47.0,
+      "marketValue": 431930.0,
+      "weightPct": 0.75,
+      "assetType": "security"
+    },
+    {
+      "code": "150900",
+      "name": "파수AI",
+      "quantity": 53.0,
+      "marketValue": 402800.0,
+      "weightPct": 0.7,
+      "assetType": "security"
+    },
+    {
+      "code": "159010",
+      "name": "아스플로",
+      "quantity": 12.0,
+      "marketValue": 291000.0,
+      "weightPct": 0.5,
+      "assetType": "security"
+    },
+    {
+      "code": "174900",
+      "name": "앱클론",
+      "quantity": 60.0,
+      "marketValue": 1200000.0,
+      "weightPct": 2.07,
+      "assetType": "security"
+    },
+    {
+      "code": "178320",
+      "name": "서진시스템",
+      "quantity": 71.0,
+      "marketValue": 1970250.0,
+      "weightPct": 3.4,
+      "assetType": "security"
+    },
+    {
+      "code": "187790",
+      "name": "나노",
+      "quantity": 131.0,
+      "marketValue": 190998.0,
+      "weightPct": 0.33,
+      "assetType": "security"
+    },
+    {
+      "code": "189300",
+      "name": "인텔리안테크",
+      "quantity": 3.0,
+      "marketValue": 138300.0,
+      "weightPct": 0.24,
+      "assetType": "security"
+    },
+    {
+      "code": "200470",
+      "name": "에이팩트",
+      "quantity": 46.0,
+      "marketValue": 273240.0,
+      "weightPct": 0.47,
+      "assetType": "security"
+    },
+    {
+      "code": "204620",
+      "name": "글로벌텍스프리",
+      "quantity": 235.0,
+      "marketValue": 1518100.0,
+      "weightPct": 2.62,
+      "assetType": "security"
+    },
+    {
+      "code": "214450",
+      "name": "파마리서치",
+      "quantity": 1.0,
+      "marketValue": 270500.0,
+      "weightPct": 0.47,
+      "assetType": "security"
+    },
+    {
+      "code": "218410",
+      "name": "RFHIC",
+      "quantity": 32.0,
+      "marketValue": 1920000.0,
+      "weightPct": 3.32,
+      "assetType": "security"
+    },
+    {
+      "code": "222800",
+      "name": "심텍",
+      "quantity": 22.0,
+      "marketValue": 2257200.0,
+      "weightPct": 3.9,
+      "assetType": "security"
+    },
+    {
+      "code": "226950",
+      "name": "올릭스",
+      "quantity": 8.0,
+      "marketValue": 732800.0,
+      "weightPct": 1.27,
+      "assetType": "security"
+    },
+    {
+      "code": "232140",
+      "name": "와이씨",
+      "quantity": 60.0,
+      "marketValue": 831600.0,
+      "weightPct": 1.44,
+      "assetType": "security"
+    },
+    {
+      "code": "241710",
+      "name": "코스메카코리아",
+      "quantity": 22.0,
+      "marketValue": 2816000.0,
+      "weightPct": 4.86,
+      "assetType": "security"
+    },
+    {
+      "code": "252990",
+      "name": "샘씨엔에스",
+      "quantity": 103.0,
+      "marketValue": 1274110.0,
+      "weightPct": 2.2,
+      "assetType": "security"
+    },
+    {
+      "code": "253590",
+      "name": "네오셈",
+      "quantity": 47.0,
+      "marketValue": 507130.0,
+      "weightPct": 0.88,
+      "assetType": "security"
+    },
+    {
+      "code": "295310",
+      "name": "에이치브이엠",
+      "quantity": 7.0,
+      "marketValue": 408800.0,
+      "weightPct": 0.71,
+      "assetType": "security"
+    },
+    {
+      "code": "298380",
+      "name": "에이비엘바이오",
+      "quantity": 9.0,
+      "marketValue": 332550.0,
+      "weightPct": 0.57,
+      "assetType": "security"
+    },
+    {
+      "code": "319660",
+      "name": "피에스케이",
+      "quantity": 2.0,
+      "marketValue": 151000.0,
+      "weightPct": 0.26,
+      "assetType": "security"
+    },
+    {
+      "code": "323350",
+      "name": "다원넥스뷰",
+      "quantity": 117.0,
+      "marketValue": 1674270.0,
+      "weightPct": 2.89,
+      "assetType": "security"
+    },
+    {
+      "code": "328130",
+      "name": "루닛",
+      "quantity": 104.0,
+      "marketValue": 1743040.0,
+      "weightPct": 3.01,
+      "assetType": "security"
+    },
+    {
+      "code": "347850",
+      "name": "디앤디파마텍",
+      "quantity": 4.0,
+      "marketValue": 145800.0,
+      "weightPct": 0.25,
+      "assetType": "security"
+    },
+    {
+      "code": "356860",
+      "name": "티엘비",
+      "quantity": 35.0,
+      "marketValue": 1344000.0,
+      "weightPct": 2.32,
+      "assetType": "security"
+    },
+    {
+      "code": "394800",
+      "name": "쓰리빌리언",
+      "quantity": 252.0,
+      "marketValue": 1796760.0,
+      "weightPct": 3.1,
+      "assetType": "security"
+    },
+    {
+      "code": "397030",
+      "name": "에이프릴바이오",
+      "quantity": 14.0,
+      "marketValue": 187600.0,
+      "weightPct": 0.32,
+      "assetType": "security"
+    },
+    {
+      "code": "403870",
+      "name": "HPSP",
+      "quantity": 14.0,
+      "marketValue": 526400.0,
+      "weightPct": 0.91,
+      "assetType": "security"
+    },
+    {
+      "code": "417840",
+      "name": "저스템",
+      "quantity": 31.0,
+      "marketValue": 270010.0,
+      "weightPct": 0.47,
+      "assetType": "security"
+    },
+    {
+      "code": "437730",
+      "name": "삼현",
+      "quantity": 27.0,
+      "marketValue": 1622700.0,
+      "weightPct": 2.8,
+      "assetType": "security"
+    },
+    {
+      "code": "440110",
+      "name": "파두",
+      "quantity": 4.0,
+      "marketValue": 105800.0,
+      "weightPct": 0.18,
+      "assetType": "security"
+    },
+    {
+      "code": "452430",
+      "name": "사피엔반도체",
+      "quantity": 22.0,
+      "marketValue": 572000.0,
+      "weightPct": 0.99,
+      "assetType": "security"
+    },
+    {
+      "code": "456010",
+      "name": "아이씨티케이",
+      "quantity": 77.0,
+      "marketValue": 1283590.0,
+      "weightPct": 2.22,
+      "assetType": "security"
+    },
+    {
+      "code": "456160",
+      "name": "지투지바이오",
+      "quantity": 56.0,
+      "marketValue": 2452800.0,
+      "weightPct": 4.24,
+      "assetType": "security"
+    },
+    {
+      "code": "468530",
+      "name": "프로티나",
+      "quantity": 32.0,
+      "marketValue": 2259200.0,
+      "weightPct": 3.9,
+      "assetType": "security"
+    },
+    {
+      "code": "476830",
+      "name": "알지노믹스",
+      "quantity": 46.0,
+      "marketValue": 1147700.0,
+      "weightPct": 1.98,
+      "assetType": "security"
+    },
+    {
+      "code": "484590",
+      "name": "삼양컴텍",
+      "quantity": 106.0,
+      "marketValue": 506680.0,
+      "weightPct": 0.87,
+      "assetType": "security"
+    },
+    {
+      "code": "KRD010010001",
+      "name": "원화예금",
+      "quantity": 2535564.0,
+      "marketValue": 2535564.0,
+      "weightPct": 4.38,
+      "assetType": "cash"
+    }
+  ]
+}

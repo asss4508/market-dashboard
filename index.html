@@ -1,129 +1,82 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>국내 증시 · 매크로 대시보드</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="코스피와 코스닥의 수급, 유동성, 시장확산도, 밸류에이션, 선물·옵션 및 ETF 보유비중 변화를 한눈에 확인하세요.">
+  <meta name="color-scheme" content="light dark">
+  <title>국내 증시 · 매크로 대시보드</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="vendor/chart.umd.min.js"></script>
 </head>
 <body>
-<header>
-  <h1>국내 증시 · 매크로 대시보드</h1>
-  <p>매일 장 마감 후 자동 갱신됩니다 &middot; <span id="last-updated" class="status">불러오는 중…</span></p>
-</header>
-
-<main>
-  <section class="card" id="card-kospi" data-chart-key="kospi">
-    <div class="card-header">
-      <h2 class="card-title">코스피</h2>
-      <span class="stat-value" id="kospi-value">–</span>
-      <span class="stat-delta" id="kospi-delta"></span>
-      <span class="stat-live" id="kospi-live"></span>
-    </div>
-    <div class="chart-wrap"><canvas id="chart-kospi"></canvas></div>
-  </section>
-
-  <section class="card" id="card-kosdaq" data-chart-key="kosdaq">
-    <div class="card-header">
-      <h2 class="card-title">코스닥</h2>
-      <span class="stat-value" id="kosdaq-value">–</span>
-      <span class="stat-delta" id="kosdaq-delta"></span>
-      <span class="stat-live" id="kosdaq-live"></span>
-    </div>
-    <div class="chart-wrap"><canvas id="chart-kosdaq"></canvas></div>
-  </section>
-
-  <section class="card" id="card-margin" data-chart-key="margin">
-    <div class="card-header">
-      <h2 class="card-title">신용거래융자 잔고</h2>
-      <span class="stat-asof" id="margin-asof"></span>
-      <div class="stat-item">
-        <span class="stat-label"><span class="dot s1"></span>코스피</span>
-        <span class="stat-value" id="margin-kospi-value">–</span>
-        <span class="stat-delta" id="margin-kospi-delta"></span>
+  <a class="skip-link" href="#main">본문으로 이동</a>
+  <header class="app-header">
+    <div class="shell masthead">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></div>
+        <h1>국내 증시 <span>· 매크로</span></h1>
       </div>
-      <div class="stat-item">
-        <span class="stat-label"><span class="dot s2"></span>코스닥</span>
-        <span class="stat-value" id="margin-kosdaq-value">–</span>
-        <span class="stat-delta" id="margin-kosdaq-delta"></span>
+      <div class="header-actions">
+        <span class="publication" id="last-updated" role="status">데이터 불러오는 중</span>
+        <button class="header-button" type="button" id="data-status">데이터 상태</button>
+        <button class="header-button theme-button" type="button" id="theme-toggle" aria-label="다크 모드로 전환">
+          <span id="theme-icon" aria-hidden="true">☾</span><span id="theme-label">다크 모드</span>
+        </button>
       </div>
     </div>
-    <div class="chart-wrap"><canvas id="chart-margin"></canvas></div>
-  </section>
-
-  <section class="card" id="card-deposit" data-chart-key="deposit">
-    <div class="card-header card-header--split">
-      <h2 class="card-title">투자자예탁금 추이</h2>
-      <span class="stat-asof" id="deposit-asof"></span>
+    <nav class="primary-nav" aria-label="대시보드 메뉴">
+      <div class="shell navigation" id="navigation" role="tablist" aria-label="분석 메뉴"></div>
+    </nav>
+  </header>
+  <main class="shell main" id="main">
+    <section class="market-tiles" id="market-tiles" aria-label="주요 시장 지표"></section>
+    <div id="load-warning" class="notice warning" hidden></div>
+    <div class="page-heading">
+      <div>
+        <h2 id="page-title">전체 개요</h2>
+        <p id="page-description"></p>
+      </div>
+      <div id="view-modes" class="view-modes">
+        <div class="segmented" id="scale-mode" role="group" aria-label="차트 표시 단위">
+          <button type="button" data-scale="raw" aria-pressed="true">원래 단위</button>
+          <button type="button" data-scale="indexed" aria-pressed="false">기준 100</button>
+        </div>
+        <button class="button" type="button" id="config-open">가중치 설정</button>
+      </div>
     </div>
-    <div class="stat-row">
-      <span class="stat-value" id="deposit-value">–</span>
-      <span class="stat-delta" id="deposit-delta"></span>
+    <div class="view-toolbar" id="time-toolbar">
+      <div class="range-controls">
+        <span class="toolbar-label">조회 기간</span>
+        <div class="segmented date-presets" id="range-buttons" role="group" aria-label="조회 기간"></div>
+      </div>
+      <div class="range-controls">
+        <span class="period-label" id="period-label"></span>
+        <button type="button" id="range-edit" class="button" aria-expanded="false" aria-controls="date-form">날짜 선택</button>
+      </div>
+      <form id="date-form" class="date-form" hidden>
+        <label>시작일 <input type="date" name="from" required></label>
+        <label>종료일 <input type="date" name="to" required></label>
+        <button type="submit" class="button primary">적용</button>
+        <span id="date-error" class="field-error" role="status"></span>
+      </form>
     </div>
-    <div class="chart-wrap"><canvas id="chart-deposit"></canvas></div>
-  </section>
-
-  <section class="card" id="card-reverse" data-chart-key="reverse">
-    <div class="card-header card-header--split">
-      <h2 class="card-title">일별 반대매매 금액</h2>
-      <span class="stat-asof" id="reverse-asof"></span>
+    <section id="view" class="dashboard-grid" role="tabpanel" tabindex="0" aria-labelledby="tab-overview" aria-busy="true">
+      <div class="empty-state span-12">시장 데이터를 불러오는 중입니다.</div>
+    </section>
+    <noscript><p class="notice warning">이 대시보드에서는 JavaScript로 차트와 ETF 공시를 표시합니다.</p></noscript>
+  </main>
+  <footer class="shell footer">
+    <span>국내 증시 · 매크로 대시보드</span>
+    <button type="button" class="text-button" id="method-open">산식과 데이터 출처</button>
+  </footer>
+  <dialog id="drawer" class="dialog">
+    <div class="dialog-head">
+      <h2 id="dialog-title"></h2>
+      <form method="dialog"><button class="button close-button" aria-label="닫기">닫기</button></form>
     </div>
-    <div class="stat-row">
-      <span class="stat-value" id="reverse-value">–</span>
-      <span class="stat-delta" id="reverse-delta"></span>
-    </div>
-    <div class="chart-wrap"><canvas id="chart-reverse"></canvas></div>
-  </section>
-
-  <section class="card" id="card-flow" data-chart-key="flow">
-    <div class="card-header">
-      <h2 class="card-title">투자자별 매매동향</h2>
-      <span class="card-sub">최근 1년 누적 순매수</span>
-    </div>
-    <div class="toggles">
-      <label><input type="checkbox" data-target="flow-inst" checked><span class="dot s1"></span>기관</label>
-      <label><input type="checkbox" data-target="flow-foreign" checked><span class="dot s2"></span>외국인</label>
-      <label><input type="checkbox" data-target="flow-individual" checked><span class="dot s3"></span>개인</label>
-    </div>
-    <div class="chart-wrap"><canvas id="chart-flow"></canvas></div>
-  </section>
-
-  <section class="card" id="card-us10y" data-chart-key="us10y">
-    <div class="card-header">
-      <h2 class="card-title">미국 10년물 국채금리</h2>
-      <span class="stat-value" id="us10y-value">–</span>
-      <span class="stat-delta" id="us10y-delta"></span>
-      <span class="stat-live" id="us10y-live"></span>
-    </div>
-    <div class="chart-wrap"><canvas id="chart-us10y"></canvas></div>
-  </section>
-
-  <section class="card" id="card-fx" data-chart-key="fx">
-    <div class="card-header">
-      <h2 class="card-title">원/달러 환율</h2>
-      <span class="stat-value" id="fx-usd-value">–</span>
-      <span class="stat-delta" id="fx-usd-delta"></span>
-      <span class="stat-live" id="fx-usd-live"></span>
-    </div>
-    <div class="chart-wrap"><canvas id="chart-fx"></canvas></div>
-  </section>
-</main>
-
-<footer>
-  데이터 출처: KRX 정보데이터시스템, 한국은행 ECOS, 금융투자협회, FRED
-</footer>
-
-<div id="chart-modal" class="modal-backdrop">
-  <div class="modal-dialog">
-    <div class="modal-header">
-      <h2 id="modal-title" class="card-title"></h2>
-      <button id="modal-close" class="modal-close" aria-label="닫기">&times;</button>
-    </div>
-    <div class="modal-chart-wrap"><canvas id="modal-canvas"></canvas></div>
-  </div>
-</div>
-
-<script src="app.js"></script>
+    <div id="dialog-body" class="dialog-body"></div>
+  </dialog>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

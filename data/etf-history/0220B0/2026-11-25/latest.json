@@ -1,0 +1,377 @@
+{
+  "date": "2026-11-25",
+  "collectedAt": "2026-11-27T08:44:56+09:00",
+  "complete": true,
+  "totalRows": 46,
+  "revisionHash": "abee02f5150a224f8bfb8892e0e33b7fd8f9aa5f2375937c074f8ffde10f8a57",
+  "holdings": [
+    {
+      "code": "005290",
+      "name": "동진쎄미켐",
+      "quantity": 394.0,
+      "marketValue": 12489800.0,
+      "weightPct": 3.14539357,
+      "assetType": "security"
+    },
+    {
+      "code": "0147B0",
+      "name": "래블업",
+      "quantity": 325.0,
+      "marketValue": 3201250.0,
+      "weightPct": 0.80619315,
+      "assetType": "security"
+    },
+    {
+      "code": "0162D0",
+      "name": "동원파츠",
+      "quantity": 339.0,
+      "marketValue": 5515530.0,
+      "weightPct": 1.38901444,
+      "assetType": "security"
+    },
+    {
+      "code": "031980",
+      "name": "피에스케이홀딩스",
+      "quantity": 104.0,
+      "marketValue": 12303200.0,
+      "weightPct": 3.09840079,
+      "assetType": "security"
+    },
+    {
+      "code": "033160",
+      "name": "엠케이전자",
+      "quantity": 162.0,
+      "marketValue": 1521180.0,
+      "weightPct": 0.38308938,
+      "assetType": "security"
+    },
+    {
+      "code": "033640",
+      "name": "네패스",
+      "quantity": 80.0,
+      "marketValue": 1294400.0,
+      "weightPct": 0.32597779,
+      "assetType": "security"
+    },
+    {
+      "code": "036810",
+      "name": "에프에스티",
+      "quantity": 248.0,
+      "marketValue": 4997200.0,
+      "weightPct": 1.25847978,
+      "assetType": "security"
+    },
+    {
+      "code": "039030",
+      "name": "이오테크닉스",
+      "quantity": 45.0,
+      "marketValue": 12690000.0,
+      "weightPct": 3.19581133,
+      "assetType": "security"
+    },
+    {
+      "code": "039440",
+      "name": "에스티아이",
+      "quantity": 440.0,
+      "marketValue": 8250000.0,
+      "weightPct": 2.07765512,
+      "assetType": "security"
+    },
+    {
+      "code": "058470",
+      "name": "리노공업",
+      "quantity": 281.0,
+      "marketValue": 12855750.0,
+      "weightPct": 3.23755331,
+      "assetType": "security"
+    },
+    {
+      "code": "059090",
+      "name": "미코",
+      "quantity": 820.0,
+      "marketValue": 13390600.0,
+      "weightPct": 3.37224833,
+      "assetType": "security"
+    },
+    {
+      "code": "064290",
+      "name": "인텍플러스",
+      "quantity": 389.0,
+      "marketValue": 13595550.0,
+      "weightPct": 3.42386232,
+      "assetType": "security"
+    },
+    {
+      "code": "077360",
+      "name": "덕산하이메탈",
+      "quantity": 182.0,
+      "marketValue": 1170260.0,
+      "weightPct": 0.29471475,
+      "assetType": "security"
+    },
+    {
+      "code": "083450",
+      "name": "GST",
+      "quantity": 57.0,
+      "marketValue": 2337000.0,
+      "weightPct": 0.58854303,
+      "assetType": "security"
+    },
+    {
+      "code": "089890",
+      "name": "코세스",
+      "quantity": 136.0,
+      "marketValue": 4460800.0,
+      "weightPct": 1.12339442,
+      "assetType": "security"
+    },
+    {
+      "code": "092870",
+      "name": "엑시콘",
+      "quantity": 284.0,
+      "marketValue": 13859200.0,
+      "weightPct": 3.49025914,
+      "assetType": "security"
+    },
+    {
+      "code": "093520",
+      "name": "매커스",
+      "quantity": 70.0,
+      "marketValue": 2030000.0,
+      "weightPct": 0.51122908,
+      "assetType": "security"
+    },
+    {
+      "code": "095340",
+      "name": "ISC",
+      "quantity": 22.0,
+      "marketValue": 2538800.0,
+      "weightPct": 0.63936374,
+      "assetType": "security"
+    },
+    {
+      "code": "095610",
+      "name": "테스",
+      "quantity": 42.0,
+      "marketValue": 3225600.0,
+      "weightPct": 0.81232538,
+      "assetType": "security"
+    },
+    {
+      "code": "112290",
+      "name": "와이씨켐",
+      "quantity": 203.0,
+      "marketValue": 1319500.0,
+      "weightPct": 0.3322989,
+      "assetType": "security"
+    },
+    {
+      "code": "121600",
+      "name": "나노신소재",
+      "quantity": 183.0,
+      "marketValue": 11419200.0,
+      "weightPct": 2.87577689,
+      "assetType": "security"
+    },
+    {
+      "code": "122640",
+      "name": "예스티",
+      "quantity": 190.0,
+      "marketValue": 4541000.0,
+      "weightPct": 1.14359175,
+      "assetType": "security"
+    },
+    {
+      "code": "137400",
+      "name": "피엔티",
+      "quantity": 498.0,
+      "marketValue": 11404200.0,
+      "weightPct": 2.87199934,
+      "assetType": "security"
+    },
+    {
+      "code": "144960",
+      "name": "뉴파워프라즈마",
+      "quantity": 1538.0,
+      "marketValue": 15026260.0,
+      "weightPct": 3.78416801,
+      "assetType": "security"
+    },
+    {
+      "code": "159010",
+      "name": "아스플로",
+      "quantity": 460.0,
+      "marketValue": 11362000.0,
+      "weightPct": 2.86137182,
+      "assetType": "security"
+    },
+    {
+      "code": "170920",
+      "name": "엘티씨",
+      "quantity": 79.0,
+      "marketValue": 1931550.0,
+      "weightPct": 0.48643573,
+      "assetType": "security"
+    },
+    {
+      "code": "171090",
+      "name": "선익시스템",
+      "quantity": 162.0,
+      "marketValue": 10416600.0,
+      "weightPct": 2.62328513,
+      "assetType": "security"
+    },
+    {
+      "code": "200470",
+      "name": "에이팩트",
+      "quantity": 1212.0,
+      "marketValue": 7490160.0,
+      "weightPct": 1.88629931,
+      "assetType": "security"
+    },
+    {
+      "code": "218410",
+      "name": "RFHIC",
+      "quantity": 452.0,
+      "marketValue": 24227200.0,
+      "weightPct": 6.10130499,
+      "assetType": "security"
+    },
+    {
+      "code": "222800",
+      "name": "심텍",
+      "quantity": 262.0,
+      "marketValue": 26697800.0,
+      "weightPct": 6.72349345,
+      "assetType": "security"
+    },
+    {
+      "code": "232140",
+      "name": "와이씨",
+      "quantity": 459.0,
+      "marketValue": 6728940.0,
+      "weightPct": 1.69459596,
+      "assetType": "security"
+    },
+    {
+      "code": "252990",
+      "name": "샘씨엔에스",
+      "quantity": 2039.0,
+      "marketValue": 25385550.0,
+      "weightPct": 6.39302036,
+      "assetType": "security"
+    },
+    {
+      "code": "253590",
+      "name": "네오셈",
+      "quantity": 850.0,
+      "marketValue": 9265000.0,
+      "weightPct": 2.33326966,
+      "assetType": "security"
+    },
+    {
+      "code": "290550",
+      "name": "디케이티",
+      "quantity": 1216.0,
+      "marketValue": 39884800.0,
+      "weightPct": 10.04446776,
+      "assetType": "security"
+    },
+    {
+      "code": "319660",
+      "name": "피에스케이",
+      "quantity": 168.0,
+      "marketValue": 12835200.0,
+      "weightPct": 3.23237806,
+      "assetType": "security"
+    },
+    {
+      "code": "327260",
+      "name": "RF머트리얼즈",
+      "quantity": 240.0,
+      "marketValue": 6288000.0,
+      "weightPct": 1.58355096,
+      "assetType": "security"
+    },
+    {
+      "code": "345290",
+      "name": "영광와이케이엠씨",
+      "quantity": 957.0,
+      "marketValue": 5904690.0,
+      "weightPct": 1.48701932,
+      "assetType": "security"
+    },
+    {
+      "code": "357780",
+      "name": "솔브레인",
+      "quantity": 30.0,
+      "marketValue": 7395000.0,
+      "weightPct": 1.8623345,
+      "assetType": "security"
+    },
+    {
+      "code": "403870",
+      "name": "HPSP",
+      "quantity": 130.0,
+      "marketValue": 5044000.0,
+      "weightPct": 1.27026575,
+      "assetType": "security"
+    },
+    {
+      "code": "417840",
+      "name": "저스템",
+      "quantity": 209.0,
+      "marketValue": 1866370.0,
+      "weightPct": 0.47002099,
+      "assetType": "security"
+    },
+    {
+      "code": "420770",
+      "name": "기가비스",
+      "quantity": 79.0,
+      "marketValue": 5387800.0,
+      "weightPct": 1.35684731,
+      "assetType": "security"
+    },
+    {
+      "code": "425420",
+      "name": "티에프이",
+      "quantity": 104.0,
+      "marketValue": 5470400.0,
+      "weightPct": 1.37764904,
+      "assetType": "security"
+    },
+    {
+      "code": "440110",
+      "name": "파두",
+      "quantity": 71.0,
+      "marketValue": 1810500.0,
+      "weightPct": 0.45595086,
+      "assetType": "security"
+    },
+    {
+      "code": "445180",
+      "name": "퓨릿",
+      "quantity": 178.0,
+      "marketValue": 1208620.0,
+      "weightPct": 0.30437522,
+      "assetType": "security"
+    },
+    {
+      "code": "471800",
+      "name": "에이엘로봇",
+      "quantity": 345.0,
+      "marketValue": 3460350.0,
+      "weightPct": 0.87144411,
+      "assetType": "security"
+    },
+    {
+      "code": "KRW-CASH",
+      "name": "원화현금",
+      "quantity": 1585454.0,
+      "marketValue": 1585454.0,
+      "weightPct": 0.39927595,
+      "assetType": "cash"
+    }
+  ]
+}

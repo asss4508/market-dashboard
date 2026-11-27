@@ -1,5 +1,6 @@
-pykrx
+pykrx==1.2.8
 finance-datareader
 pandas
 requests
 beautifulsoup4
+openpyxl
