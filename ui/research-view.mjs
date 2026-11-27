@@ -10,20 +10,15 @@ function interval(values, unit = "%") {
 }
 
 export function renderScores(research) {
-  const panel = create("article", { className: "card card-pad score-panel span-4" }, create("h3", { text: "시장 국면과 점수" }));
-  const regime = research?.regime;
-  const label = regime?.label || "N/A";
-  const riskScore = Math.max(research?.scores?.stress?.value ?? -1, research?.scores?.overheat?.value ?? -1);
-  const riskLevel = riskScore >= 75 ? "high" : riskScore >= 60 ? "caution" : riskScore >= 0 ? "low" : "unrated";
-  panel.append(create("div", { className: "regime-card", "data-risk": riskLevel },
-    create("small", { text: "시장 국면" + (research?.asOf ? " · " + research.asOf : "") }),
-    create("strong", { text: label }),
-    create("p", { className: "meta", text: regime?.reason || "지수 기준일에 사용할 분석 자료를 확보하지 못했습니다." }),
-    research?.previousRegime?.label && create("p", { className: "meta", text: "직전 관측일 · " + research.previousRegime.label }),
-  ));
+  const panel = create("article", { className: "card card-pad score-panel span-4" }, create("h3", { text: "현재 신호" }),
+    create("p", { className: "meta", text: "기준일 " + (research?.conclusion?.asOf || research?.asOf || "미확인") + " · 점수는 100점 기준" }));
   const scores = create("div", { className: "score-list" });
+  const basis = create("details", { className: "score-basis" }, create("summary", { text: "계산 근거" }),
+    create("p", { className: "meta", text: "반영 지표 수와 가중치 비중은 계산에 사용한 자료의 범위이며, 예측 정확도가 아닙니다." }));
+  const basisItems = create("ul");
   for (const [id, name] of Object.entries(SCORE_LABELS)) {
     const score = research?.scores?.[id];
+    const explanation = research?.conclusion?.scoreLabels?.[id];
     const value = score?.value;
     const level = id === "momentum" ? "momentum" : value >= 75 ? "high" : value >= 60 ? "guard" : "normal";
     const item = create("section", { className: "score", "data-level": level },
@@ -36,20 +31,93 @@ export function renderScores(research) {
       item.append(create("div", { className: "score-track", role: "meter", "aria-label": name,
         "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": value }, bar));
     }
-    const coverage = score ? "사용 " + score.used + "/" + score.total + " · 가중치 커버리지 " + quantity(score.coveragePct, "%", 0)
-      : "계산 자료 대기";
-    item.append(create("p", { className: "meta", text: [coverage, score?.reason].filter(Boolean).join(" · ") }));
+    item.append(create("p", { className: "score-meaning" },
+      create("strong", { text: explanation?.label || (valid(value) ? "분석값 확인" : "자료 부족") }),
+      create("span", { text: explanation?.text || score?.reason || "점수 해석에 필요한 분석 자료를 확인하고 있습니다." })));
+    const coverage = score ? "설정 지표 " + score.total + "개 중 " + score.used + "개 반영 · 설정 가중치의 " + quantity(score.coveragePct, "%", 0) + " 반영"
+      : "계산 자료 미확보";
+    basisItems.append(create("li", {}, create("strong", { text: name }),
+      create("p", { text: [coverage, score?.reason].filter(Boolean).join(" · ") })));
     scores.append(item);
   }
-  panel.append(scores);
+  basis.append(basisItems);
+  panel.append(scores, basis);
   return panel;
 }
 
+export function renderConclusion(research, options = {}) {
+  const conclusion = research?.conclusion;
+  const recorded = Boolean(options.freshness || research?.stale);
+  const asOf = conclusion?.asOf || research?.analysisThrough || research?.asOf;
+  const card = create("article", { className: "card decision-card span-12", "data-tone": conclusion?.tone || "data", "aria-labelledby": "decision-headline" });
+  const top = create("div", { className: "decision-topline" },
+    create("p", { className: "decision-eyebrow", text: recorded ? "기록된 분석" : "지금의 판단" }),
+    create("p", { className: "decision-date", text: asOf ? (recorded ? "기록된 분석 기준일 · " : "분석 기준일 · ") + asOf : "분석 기준일 미확인" }));
+  card.append(top);
+  const warning = options.freshness || (research?.stale ? "분석 기준일 이후 자료가 반영되지 않았습니다. 아래 판단은 기록된 기준일의 자료에 근거합니다." : null);
+  if (warning) card.append(create("p", { className: "notice warning decision-freshness", text: warning }));
+  card.append(create("h3", { id: "decision-headline", text: conclusion?.headline || "시장 판단을 위한 분석 자료가 부족합니다." }));
+  if (conclusion?.stance) card.append(create("p", { className: "decision-stance", text: conclusion.stance }));
+  card.append(create("p", { className: "decision-summary", text: conclusion?.summary || "지표별 관측일과 확보 상태를 확인한 뒤 분석을 갱신해야 합니다." }));
+
+  const evidence = conclusion?.evidence || [];
+  if (evidence.length) card.append(create("div", { className: "decision-evidence", "aria-label": "판단 근거" }, evidence.map((item) =>
+    create("section", { className: "decision-fact" },
+      create("h4", { text: item.label }),
+      create("p", { className: "decision-fact-value", text: valid(item.value) ? quantity(item.value, item.unit) : item.value || "자료 부족" }),
+      create("p", { className: "decision-fact-meaning", text: item.meaning }),
+      item.date && create("p", { className: "meta", text: item.date + " 기준" }))
+  )));
+
+  const watch = conclusion?.watch || [];
+  if (watch.length) card.append(create("div", { className: "decision-watch", "aria-label": "판단이 달라질 조건" }, watch.slice(0, 2).map((item) =>
+    create("section", {}, create("h4", { text: item.label }), create("p", { text: item.text }))
+  )));
+
+  const backtest = conclusion?.backtest;
+  const limitations = conclusion?.limitations || [];
+  const details = backtest || limitations.length || watch.length > 2 ? create("details", { className: "decision-details" },
+    create("summary", { text: "과거 결과와 분석 범위" })) : null;
+  if (watch.length > 2) details.append(create("div", { className: "decision-watch decision-watch-extra" }, watch.slice(2).map((item) =>
+    create("section", {}, create("h4", { text: item.label }), create("p", { text: item.text }))
+  )));
+  if (backtest) {
+    const historical = create("section", { className: "decision-history", "aria-label": "같은 조건의 과거 결과" },
+      create("h4", { text: "같은 조건의 과거 결과" }),
+      create("p", { className: "meta", text: (backtest.label || "") + (backtest.condition ? " · " + backtest.condition : "") + " · 이후 " + backtest.horizon + " 거래일" }));
+    const statistics = [
+      ["표본 수", format(backtest.n, 0) + "개"],
+      ["과거 상승 비율", quantity(backtest.upProbability, "%")],
+      ["상승 비율 95% 신뢰구간", interval(backtest.upCi)],
+      ["평균 수익률", signed(backtest.mean, "%")],
+      ["전체 기간 평균", signed(backtest.baselineMean, "%")],
+      ["전체 평균 대비", signed(backtest.excess, "%p")],
+    ];
+    historical.append(create("dl", { className: "decision-statistics" }, statistics.map(([label, value]) =>
+      create("div", {}, create("dt", { text: label }), create("dd", { text: value })))));
+    historical.append(create("p", { className: "decision-history-note", text: "과거에 이 조건이 성립한 표본의 결과이며, 앞으로의 상승 확률이 아닙니다." }));
+    if (backtest.note) historical.append(create("p", { className: "meta", text: backtest.note }));
+    if (backtest.oos) historical.append(create("p", { className: "meta", text: backtest.oos.n > 0
+      ? "워크포워드 검증 · 표본 " + format(backtest.oos.n, 0) + "개 · 과거 상승 비율 " + quantity(backtest.oos.upProbability, "%")
+        + " · 평균 수익률 " + signed(backtest.oos.mean, "%")
+      : "워크포워드 검증에 필요한 학습·검증 표본이 부족해 검증 성과를 제시하지 않습니다." }));
+    details.append(historical);
+  }
+  if (limitations.length) details.append(create("p", { className: "decision-limitations", text: "해석의 범위 · " + limitations.join(" ") }));
+  if (details) card.append(details);
+  if (conclusion?.basisNote) card.append(create("p", { className: "decision-basis-note", text: conclusion.basisNote }));
+  return card;
+}
+
 export function renderContributors(research) {
-  const card = create("article", { className: "card card-pad span-5" }, create("h3", { text: "상위 5개 점수 기여 지표" }));
+  const card = create("details", { className: "card calculation-details span-12" }, create("summary", { text: "점수 산식과 기여 지표" }));
+  const content = create("div", { className: "calculation-content" },
+    create("p", { className: "meta", text: "각 지표의 과거 분포상 위치에 설정 가중치를 적용해 점수를 계산합니다. 아래 수치는 점수에 더해진 기여도이며, 향후 수익률의 예측값이 아닙니다." }),
+    create("h4", { text: "상위 5개 점수 기여 지표" }));
+  card.append(content);
   const entries = (research?.contributors || []).slice(0, 5);
   if (!entries.length) {
-    card.append(create("p", { className: "meta", text: "점수에 반영할 수 있는 관측치가 부족합니다." }));
+    content.append(create("p", { className: "meta", text: "점수에 반영할 수 있는 관측치가 부족합니다." }));
     return card;
   }
   const items = entries.map((item) => create("li", {},
@@ -62,7 +130,7 @@ export function renderContributors(research) {
       valid(item.percentile) ? "백분위 " + format(item.percentile, 1) : null,
     ].filter(Boolean).join(" · ") }),
   ));
-  card.append(create("ul", { className: "contrib-list" }, items));
+  content.append(create("ul", { className: "contrib-list" }, items));
   return card;
 }
 

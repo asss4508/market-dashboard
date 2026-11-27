@@ -1,7 +1,7 @@
 ﻿import { koreaDate, toDay, valid } from "./dom.mjs";
 
 export const PAGES = {
-  overview: { label: "전체 개요", description: "지수, 과열·스트레스·모멘텀 점수와 시장 국면을 함께 확인합니다." },
+  overview: { label: "전체 개요", description: "지금의 시장 판단과 그 근거, 판단이 달라질 조건을 먼저 확인합니다." },
   flows: { label: "투자자 수급", description: "코스피·코스닥의 기관, 외국인, 개인 순매수 흐름과 거래대금을 비교합니다." },
   liquidity: { label: "유동성", description: "예탁금, 신용융자, 반대매매로 시장 자금과 레버리지 흐름을 확인합니다." },
   breadth: { label: "시장확산도", description: "상승·하락 종목 수, 신고·신저가, 이동평균 상회 비율과 규모별 지수를 비교합니다." },
@@ -26,6 +26,19 @@ export const HEADLINES = [
 ];
 
 export const SCORE_LABELS = { overheat: "과열", stress: "스트레스", momentum: "모멘텀" };
+
+export function comparisonLabel(currentDate, previousDate, frequency) {
+  const current = /^(\d{4})-(\d{2})-(\d{2})$/.exec(currentDate || "");
+  const previous = /^(\d{4})-(\d{2})-(\d{2})$/.exec(previousDate || "");
+  if (!previous) return "비교 기준일 없음";
+  if (frequency === "monthly" && current) {
+    const months = (Number(current[1]) - Number(previous[1])) * 12 + Number(current[2]) - Number(previous[2]);
+    if (months === 1) return "전월 대비";
+    return previous[1] + "." + previous[2] + " 대비";
+  }
+  const year = current && current[1] === previous[1] ? "" : previous[1] + ".";
+  return year + previous[2] + "." + previous[3] + " 대비";
+}
 
 const krx = { name: "한국거래소 · 기존 보관 이력", url: "https://data.krx.co.kr/", access: "기존 보관 이력" };
 const kofia = { name: "금융투자협회", url: "https://freesis.kofia.or.kr/", access: "기존 공개 통계" };

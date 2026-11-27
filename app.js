@@ -1,8 +1,8 @@
 import { badge, byId, create, direction, empty, koreaDate, quantity, signed, sourceLink, timestamp, toDay, valid } from "./ui/dom.mjs";
 import { chartCard, clearSharedDate, destroyPlots } from "./ui/charts.mjs";
 import { renderEtf } from "./ui/etf.mjs";
-import { CREDIT, FLOWS, FX, HEADLINES, PAGES, SCORE_LABELS, fetchData, flowLine, loadOriginalData, selectIndex } from "./ui/market.mjs";
-import { renderBacktest, renderContributors, renderCorrelations, renderDiagnosis, renderMetrics, renderScores, renderSeriesTable, renderStatus } from "./ui/research-view.mjs";
+import { CREDIT, FLOWS, FX, HEADLINES, PAGES, SCORE_LABELS, comparisonLabel, fetchData, flowLine, loadOriginalData, selectIndex } from "./ui/market.mjs";
+import { renderBacktest, renderConclusion, renderContributors, renderCorrelations, renderMetrics, renderScores, renderSeriesTable, renderStatus } from "./ui/research-view.mjs";
 
 const presets = { "1M": 1, "3M": 3, "6M": 6, "1Y": 12, "3Y": 36, "5Y": 60, "10Y": 120, ALL: null };
 const emptyDashboard = { schemaVersion: 1, generatedAt: null, series: {}, catalog: [], diagnostics: [] };
@@ -70,8 +70,9 @@ function appendHeadline(id, label) {
     const change = series.unit === "%" ? signed(amount, "%p", 3)
       : previous.value ? signed(amount / previous.value * 100, "%") : signed(amount, series.unit);
     const mark = amount > 0 ? "▲ " : amount < 0 ? "▼ " : "";
-    tile.append(create("p", { className: "tile-move " + direction(amount), title: "직전 관측일 " + previous.date,
-      text: change === "0%" || amount === 0 ? "보합" : mark + change + " · 전 관측 대비" }));
+    const comparison = comparisonLabel(current.date, previous.date, series.frequency);
+    tile.append(create("p", { className: "tile-move " + direction(amount), title: "비교 기준일 " + previous.date + " → " + current.date,
+      text: (change === "0%" || amount === 0 ? "보합" : mark + change) + " · " + comparison }));
   } else {
     tile.append(create("p", { className: "tile-missing", text: current ? "비교 관측치 없음" : whyMissing(id), title: whyMissing(id) }));
   }
@@ -136,11 +137,11 @@ function featureCharts(key, title, ids, options = {}) {
 function overview() {
   const featureIds = ["rsi", "disparity60", "rv20", "trend200", "momentum20", "creditDeposit", "foreign20", "institution20"];
   return [
+    renderConclusion(state.research, { freshness: freshnessNotice() }),
     chart(spec("overview-kospi", "코스피 종가", ["kospi"], { hero: true, span: "span-8", technical: true })),
     renderScores(state.research),
-    renderDiagnosis(state.research), renderContributors(state.research),
-    chart(spec("overview-indices", "국내 주요 지수", ["kospi", "kosdaq", "kospi200", "kosdaq150"])),
-    chart(spec("overview-fx", "주요 원화 환율", FX, { exclusive: true })),
+    chart(spec("overview-fx", "주요 원화 환율", FX, { exclusive: true, span: "span-12" })),
+    renderContributors(state.research),
     renderMetrics("시장 핵심 통계", state.research?.features || [], featureIds),
   ];
 }
@@ -440,7 +441,9 @@ function renderMethods() {
     create("p", { text: "차트에 마우스를 올리거나 초점을 둔 채 방향키를 눌러 공통 날짜를 비교할 수 있습니다. 드래그 확대를 켜고 차트에서 구간을 선택하면 조회 기간이 바뀝니다. 기준 100은 사용 가능한 첫 값을 100으로 환산합니다." }),
     create("h3", { text: "점수와 백테스트" }),
     create("p", { text: "점수는 확보된 지표의 과거 분포와 가중치를 이용한 시장 관측값입니다. 백테스트의 표본 수, 가용시점 가정, 불확실성 범위는 백테스트 메뉴에 있습니다." }),
-    ...(Array.isArray(notes) ? notes.filter((note) => typeof note === "string").map((text) => create("p", { className: "meta", text })) : []),
+    ...(Array.isArray(notes) ? notes.filter((note) => typeof note === "string").map((note) => create("p", {
+      className: "meta", text: note.replaceAll("판단 보류", "분석 자료 부족").replaceAll("판단보류", "분석 자료 부족"),
+    })) : []),
   );
   const status = create("button", { type: "button", className: "text-button", text: "지표별 출처 및 수집 상태" });
   status.addEventListener("click", openStatus);

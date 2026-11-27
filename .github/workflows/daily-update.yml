@@ -40,7 +40,7 @@ jobs:
         run: |
           python -m unittest discover -s scripts -p 'test_*.py'
           python -m unittest discover -s tests -p 'test_*.py'
-          if [ -f tests/analytics.test.mjs ]; then node --test tests/analytics.test.mjs; fi
+          if [ -f tests/analytics.test.mjs ]; then node --test tests/*.test.mjs; fi
       - name: Collect official market data
         id: market
         continue-on-error: true

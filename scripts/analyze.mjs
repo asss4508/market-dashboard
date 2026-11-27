@@ -7,4 +7,4 @@ const research=buildResearch(dashboard,undefined,{includeHistory:false});
 const target=new URL('research.json',directory), temporary=new URL('research.'+process.pid+'.tmp',directory);
 await writeFile(temporary,JSON.stringify({schemaVersion:1,generatedAt:dashboard.generatedAt,...research})+'\n');
 await rename(temporary,target);
-console.log('시장 연구 기준일',research.asOf??'자료 없음','·',research.regime.label);
+console.log('시장 연구 기준일',research.asOf??'자료 없음','·',research.conclusion.headline);

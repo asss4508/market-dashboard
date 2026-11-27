@@ -33,7 +33,7 @@ jobs:
           node-version: "24"
       - run: |
           node --check app.js
-          node --test tests/analytics.test.mjs
+          node --test tests/*.test.mjs
           python scripts/verify_data.py
           python scripts/package_pages.py
       - uses: actions/configure-pages@v5

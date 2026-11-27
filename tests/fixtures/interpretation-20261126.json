@@ -1,0 +1,779 @@
+{
+  "asOf": "2026-11-26",
+  "stale": false,
+  "regime": {
+    "id": "unknown",
+    "date": "2026-11-26"
+  },
+  "features": [
+    {
+      "id": "ma20",
+      "label": "20일 이동평균",
+      "value": 5391.734,
+      "unit": "pt",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "ma60",
+      "label": "60일 이동평균",
+      "value": 6183.322166666665,
+      "unit": "pt",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "ma120",
+      "label": "120일 이동평균",
+      "value": 6817.552416666669,
+      "unit": "pt",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "ma200",
+      "label": "200일 이동평균",
+      "value": 6524.909349999998,
+      "unit": "pt",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "rsi",
+      "label": "RSI(14)",
+      "value": 33.79121181779972,
+      "unit": "pt",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "disparity60",
+      "label": "60일 평균 대비 이격률",
+      "value": -21.240396849234177,
+      "unit": "%",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "trend200",
+      "label": "200일 평균 대비 이격률",
+      "value": -25.363560797974895,
+      "unit": "%",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "momentum5",
+      "label": "코스피 5일 수익률",
+      "value": -7.949487102426412,
+      "unit": "%",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "momentum20",
+      "label": "코스피 20일 수익률",
+      "value": -12.257715799145997,
+      "unit": "%",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "rv20",
+      "label": "20일 연율 실현변동성",
+      "value": 54.82626179454868,
+      "unit": "%",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "macd",
+      "label": "MACD(12,26)",
+      "value": -289.44668068474675,
+      "unit": "pt",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "macdSignal",
+      "label": "MACD 신호선(9)",
+      "value": -284.3126819744801,
+      "unit": "pt",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "macdHistogram",
+      "label": "MACD 히스토그램",
+      "value": -5.133998710266667,
+      "unit": "pt",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "mdd252",
+      "label": "최근 252종가 최대낙폭",
+      "value": -46.56938631089851,
+      "unit": "%",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "creditGrowth20",
+      "label": "양 시장 신용융자 20일 증가율",
+      "value": -14.064558629776025,
+      "unit": "%",
+      "date": "2026-11-19",
+      "maxAge": 12
+    },
+    {
+      "id": "creditDeposit",
+      "label": "신용융자 / 투자자예탁금",
+      "value": 31.984798332720366,
+      "unit": "%",
+      "date": "2026-11-19",
+      "maxAge": 12
+    },
+    {
+      "id": "forcedSales5",
+      "label": "반대매매 금액 5일 평균",
+      "value": 133.304,
+      "unit": "억원",
+      "date": "2026-11-19",
+      "maxAge": 12
+    },
+    {
+      "id": "fxChange20",
+      "label": "원/달러 20일 변화율",
+      "value": 0.46806583119431977,
+      "unit": "%",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "creditSpread",
+      "label": "AA− 회사채 − 국고채 3년",
+      "value": 68.69999999999999,
+      "unit": "bp",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "breadth60",
+      "label": "60일선 상회 비율",
+      "value": null,
+      "unit": "%",
+      "date": null,
+      "maxAge": 9
+    },
+    {
+      "id": "foreign20",
+      "label": "양 시장 외국인 20일 순매수",
+      "value": -167416,
+      "unit": "억원",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "foreign20Turnover",
+      "label": "양 시장 외국인 20일 순매수 / 20일 합산 거래대금",
+      "value": -3.4782774905691385,
+      "unit": "%",
+      "date": "2026-11-20",
+      "maxAge": 9
+    },
+    {
+      "id": "institution20",
+      "label": "양 시장 기관 20일 순매수",
+      "value": null,
+      "unit": "억원",
+      "date": null,
+      "maxAge": 9
+    },
+    {
+      "id": "institution20Turnover",
+      "label": "양 시장 기관 20일 순매수 / 20일 합산 거래대금",
+      "value": null,
+      "unit": "%",
+      "date": null,
+      "maxAge": 9
+    }
+  ],
+  "scores": {
+    "overheat": {
+      "value": 21.011904761904763,
+      "coveragePct": 100,
+      "contributors": [
+        {
+          "id": "rsi",
+          "value": 33.79121181779972,
+          "date": "2026-11-20",
+          "maxAge": 9
+        },
+        {
+          "id": "disparity60",
+          "value": -21.240396849234177,
+          "date": "2026-11-20",
+          "maxAge": 9
+        },
+        {
+          "id": "creditGrowth20",
+          "value": -14.064558629776025,
+          "date": "2026-11-19",
+          "maxAge": 12
+        },
+        {
+          "id": "creditDeposit",
+          "value": 31.984798332720366,
+          "date": "2026-11-19",
+          "maxAge": 12
+        }
+      ]
+    },
+    "stress": {
+      "value": 62.53968253968254,
+      "coveragePct": 100,
+      "contributors": [
+        {
+          "id": "rv20",
+          "value": 54.82626179454868,
+          "date": "2026-11-20",
+          "maxAge": 9
+        },
+        {
+          "id": "fxChange20",
+          "value": 0.46806583119431977,
+          "date": "2026-11-20",
+          "maxAge": 9
+        },
+        {
+          "id": "creditSpread",
+          "value": 68.69999999999999,
+          "date": "2026-11-20",
+          "maxAge": 9
+        },
+        {
+          "id": "forcedSales5",
+          "value": 133.304,
+          "date": "2026-11-19",
+          "maxAge": 12
+        },
+        {
+          "id": "creditDeposit",
+          "value": 31.984798332720366,
+          "date": "2026-11-19",
+          "maxAge": 12
+        }
+      ]
+    },
+    "momentum": {
+      "value": 12.16931216931217,
+      "coveragePct": 75,
+      "contributors": [
+        {
+          "id": "trend200",
+          "value": -25.363560797974895,
+          "date": "2026-11-20",
+          "maxAge": 9
+        },
+        {
+          "id": "momentum20",
+          "value": -12.257715799145997,
+          "date": "2026-11-20",
+          "maxAge": 9
+        },
+        {
+          "id": "foreign20Turnover",
+          "value": -3.4782774905691385,
+          "date": "2026-11-20",
+          "maxAge": 9
+        }
+      ]
+    }
+  },
+  "backtest": {
+    "groups": [
+      {
+        "id": "highHeat",
+        "label": "높은 과열",
+        "condition": "과열 점수 ≥ 75",
+        "horizons": [
+          {
+            "horizon": 5,
+            "n": 33,
+            "mean": -0.3847635754284802,
+            "upProbability": 45.45454545454545,
+            "upCi": [
+              29.842689125891496,
+              62.014342056250435
+            ],
+            "baselineMean": 0.45381980208048234,
+            "excess": -0.8385833775089626,
+            "oos": {
+              "n": 2,
+              "folds": 1,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          },
+          {
+            "horizon": 20,
+            "n": 15,
+            "mean": -0.21546766687149546,
+            "upProbability": 33.33333333333333,
+            "upCi": null,
+            "baselineMean": 1.9931542199475387,
+            "excess": -2.208621886819034,
+            "oos": {
+              "n": 0,
+              "folds": 0,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "highStress",
+        "label": "높은 스트레스",
+        "condition": "스트레스 점수 ≥ 75",
+        "horizons": [
+          {
+            "horizon": 5,
+            "n": 88,
+            "mean": 0.27663165635430587,
+            "upProbability": 62.5,
+            "upCi": [
+              52.06205279693488,
+              71.89223371375309
+            ],
+            "baselineMean": 0.235117678324632,
+            "excess": 0.041513978029673854,
+            "oos": {
+              "n": 57,
+              "folds": 12,
+              "mean": 0.2968083326585519,
+              "upProbability": 61.40350877192982,
+              "brier": 0.24252858046827208,
+              "baselineBrier": 0.24317671600456472
+            }
+          },
+          {
+            "horizon": 20,
+            "n": 30,
+            "mean": 2.065600855812233,
+            "upProbability": 70,
+            "upCi": [
+              52.12387898833981,
+              83.33543735604106
+            ],
+            "baselineMean": 0.9482584368679557,
+            "excess": 1.1173424189442773,
+            "oos": {
+              "n": 0,
+              "folds": 0,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "highMomentum",
+        "label": "강한 모멘텀",
+        "condition": "모멘텀 점수 ≥ 75",
+        "horizons": [
+          {
+            "horizon": 5,
+            "n": 98,
+            "mean": 0.8798887083653668,
+            "upProbability": 54.08163265306123,
+            "upCi": [
+              44.24786494488038,
+              63.60747118495262
+            ],
+            "baselineMean": 0.21527016339479138,
+            "excess": 0.6646185449705755,
+            "oos": {
+              "n": 63,
+              "folds": 12,
+              "mean": 1.1654310254509401,
+              "upProbability": 55.55555555555556,
+              "brier": 0.25333804420572853,
+              "baselineBrier": 0.2467147652633291
+            }
+          },
+          {
+            "horizon": 20,
+            "n": 35,
+            "mean": 2.1868170144180192,
+            "upProbability": 48.57142857142857,
+            "upCi": [
+              32.993980391252734,
+              64.43146037328837
+            ],
+            "baselineMean": 0.944420307548328,
+            "excess": 1.2423967068696913,
+            "oos": {
+              "n": 3,
+              "folds": 2,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "lowMomentum",
+        "label": "낮은 모멘텀",
+        "condition": "모멘텀 점수 ≤ 25",
+        "horizons": [
+          {
+            "horizon": 5,
+            "n": 101,
+            "mean": -0.21018726886877978,
+            "upProbability": 52.475247524752476,
+            "upCi": [
+              42.824811910483206,
+              61.944287378348704
+            ],
+            "baselineMean": 0.21527016339479138,
+            "excess": -0.42545743226357113,
+            "oos": {
+              "n": 71,
+              "folds": 16,
+              "mean": -0.2843647728651758,
+              "upProbability": 50.70422535211268,
+              "brier": 0.2540720340142903,
+              "baselineBrier": 0.25313148708232824
+            }
+          },
+          {
+            "horizon": 20,
+            "n": 33,
+            "mean": -0.5937137790332505,
+            "upProbability": 45.45454545454545,
+            "upCi": [
+              29.842689125891496,
+              62.014342056250435
+            ],
+            "baselineMean": 0.944420307548328,
+            "excess": -1.5381340865815785,
+            "oos": {
+              "n": 0,
+              "folds": 0,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "stable",
+        "label": "안정적 상승",
+        "condition": "사전 정의한 안정적 상승 국면",
+        "horizons": [
+          {
+            "horizon": 5,
+            "n": 67,
+            "mean": 1.3740969368799056,
+            "upProbability": 59.70149253731343,
+            "upCi": [
+              47.74111146058888,
+              70.60968806963064
+            ],
+            "baselineMean": 0.45381980208048234,
+            "excess": 0.9202771347994233,
+            "oos": {
+              "n": 33,
+              "folds": 7,
+              "mean": 2.6603461430858655,
+              "upProbability": 75.75757575757575,
+              "brier": 0.24448501976151363,
+              "baselineBrier": 0.20309501528899546
+            }
+          },
+          {
+            "horizon": 20,
+            "n": 25,
+            "mean": 3.907969641308033,
+            "upProbability": 80,
+            "upCi": null,
+            "baselineMean": 1.9931542199475387,
+            "excess": 1.9148154213604942,
+            "oos": {
+              "n": 0,
+              "folds": 0,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "hot",
+        "label": "과열 상승",
+        "condition": "사전 정의한 과열 상승 국면",
+        "horizons": [
+          {
+            "horizon": 5,
+            "n": 25,
+            "mean": 0.4054329264250542,
+            "upProbability": 52,
+            "upCi": null,
+            "baselineMean": 0.45381980208048234,
+            "excess": -0.04838687565542815,
+            "oos": {
+              "n": 0,
+              "folds": 0,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          },
+          {
+            "horizon": 20,
+            "n": 12,
+            "mean": 0.9320634895721898,
+            "upProbability": 33.33333333333333,
+            "upCi": null,
+            "baselineMean": 1.9931542199475387,
+            "excess": -1.061090730375349,
+            "oos": {
+              "n": 0,
+              "folds": 0,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "slowing",
+        "label": "상승 둔화",
+        "condition": "사전 정의한 상승 둔화 국면",
+        "horizons": [
+          {
+            "horizon": 5,
+            "n": 40,
+            "mean": 0.5139113417161731,
+            "upProbability": 57.49999999999999,
+            "upCi": [
+              42.194800436059985,
+              71.49083147518411
+            ],
+            "baselineMean": 0.45381980208048234,
+            "excess": 0.060091539635690805,
+            "oos": {
+              "n": 9,
+              "folds": 5,
+              "mean": 2.201232313491799,
+              "upProbability": 77.77777777777777,
+              "brier": 0.23029003384985625,
+              "baselineBrier": 0.20167551755222132
+            }
+          },
+          {
+            "horizon": 20,
+            "n": 19,
+            "mean": 2.5062145844586947,
+            "upProbability": 68.42105263157895,
+            "upCi": null,
+            "baselineMean": 1.9931542199475387,
+            "excess": 0.513060364511156,
+            "oos": {
+              "n": 0,
+              "folds": 0,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "risk",
+        "label": "위험 확대",
+        "condition": "사전 정의한 위험 확대 국면",
+        "horizons": [
+          {
+            "horizon": 5,
+            "n": 35,
+            "mean": 1.1972728057139268,
+            "upProbability": 51.42857142857142,
+            "upCi": [
+              35.568539626711626,
+              67.00601960874725
+            ],
+            "baselineMean": 0.45381980208048234,
+            "excess": 0.7434530036334445,
+            "oos": {
+              "n": 0,
+              "folds": 0,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          },
+          {
+            "horizon": 20,
+            "n": 15,
+            "mean": 2.8391882360209806,
+            "upProbability": 60,
+            "upCi": null,
+            "baselineMean": 1.9931542199475387,
+            "excess": 0.8460340160734419,
+            "oos": {
+              "n": 0,
+              "folds": 0,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "liquidation",
+        "label": "디레버리징 및 투매",
+        "condition": "사전 정의한 디레버리징 및 투매 국면",
+        "horizons": [
+          {
+            "horizon": 5,
+            "n": 5,
+            "mean": 0.5603943072252962,
+            "upProbability": 60,
+            "upCi": null,
+            "baselineMean": 0.45381980208048234,
+            "excess": 0.10657450514481381,
+            "oos": {
+              "n": 0,
+              "folds": 0,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          },
+          {
+            "horizon": 20,
+            "n": 3,
+            "mean": null,
+            "upProbability": null,
+            "upCi": null,
+            "baselineMean": 1.9931542199475387,
+            "excess": null,
+            "oos": {
+              "n": 0,
+              "folds": 0,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "bottom",
+        "label": "바닥 형성 후보",
+        "condition": "사전 정의한 바닥 형성 후보 국면",
+        "horizons": [
+          {
+            "horizon": 5,
+            "n": 15,
+            "mean": 0.5388588777742148,
+            "upProbability": 60,
+            "upCi": null,
+            "baselineMean": 0.45381980208048234,
+            "excess": 0.08503907569373248,
+            "oos": {
+              "n": 0,
+              "folds": 0,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          },
+          {
+            "horizon": 20,
+            "n": 8,
+            "mean": 7.155193239990901,
+            "upProbability": 75,
+            "upCi": null,
+            "baselineMean": 1.9931542199475387,
+            "excess": 5.162039020043362,
+            "oos": {
+              "n": 0,
+              "folds": 0,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          }
+        ]
+      },
+      {
+        "id": "recovery",
+        "label": "회복 초기",
+        "condition": "사전 정의한 회복 초기 국면",
+        "horizons": [
+          {
+            "horizon": 5,
+            "n": 8,
+            "mean": 0.42687495753020166,
+            "upProbability": 62.5,
+            "upCi": null,
+            "baselineMean": 0.45381980208048234,
+            "excess": -0.026944844550280678,
+            "oos": {
+              "n": 0,
+              "folds": 0,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          },
+          {
+            "horizon": 20,
+            "n": 6,
+            "mean": 0.8058059786976527,
+            "upProbability": 66.66666666666666,
+            "upCi": null,
+            "baselineMean": 1.9931542199475387,
+            "excess": -1.187348241249886,
+            "oos": {
+              "n": 0,
+              "folds": 0,
+              "mean": null,
+              "upProbability": null,
+              "brier": null,
+              "baselineBrier": null
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
