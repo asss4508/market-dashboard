@@ -164,7 +164,7 @@ function flows() {
     create("h3", { text: "이동 누적 기간" }), periods);
   const points = Object.fromEntries(FLOWS.map((id) => [id, flowLine(findSeries(id), width)]));
   const turnoverIds = ["kospi_turnover", "kosdaq_turnover"];
-  const capIds = ["kospi_marketcap", "kosdaq_marketcap"];
+  const capIds = ["kospi_marketcap", "kosdaq_marketcap", "kosdaq_marketcap_monthly"];
   const foreignEcos = ["foreign_net_ecos", "foreign_net_kospi", "foreign_net_kosdaq"].filter((id) => findSeries(id));
   const selectedFlows = FLOWS.map((id) => selectFlow(state.dashboard, id));
   const monthlyFlows = ["institution_net_monthly", "individual_net_monthly", "foreign_net_monthly"];
@@ -194,6 +194,9 @@ function liquidity() {
     chart(spec("liquidity-forced", "일별 반대매매 금액", ["forced_sales"])),
     featureCharts("liquidity-leverage", "신용융자 / 투자자예탁금", ["creditDeposit"]),
     chart(spec("liquidity-cma", "CMA·MMF 잔고", ["cma", "mmf"])),
+    chart(spec("liquidity-kofr", "KOFR · 익일물 RP 금리", ["kr_rp"], {
+      allowIndexed: false, subtitle: "국채·통안증권 담보 원화 익일물 RP 실거래 기반 · 연율",
+    })),
     renderSeriesTable("유동성 자료", ["deposit", ...CREDIT, "forced_sales", "cma", "mmf", "kr_m2", "kr_rp"], state.dashboard),
     renderMetrics("유동성 분포", state.research?.features || [], ["creditGrowth20", "creditDeposit", "forcedSales5"]),
   ];
@@ -285,10 +288,10 @@ function derivatives() {
 }
 
 function macro() {
-  const rates = ["kr3y", "kr10y", "kr_cd91", "kr_aa3y", "kr_base_rate"];
+  const rates = ["kr3y", "kr10y", "kr_cd91", "kr_aa3y", "kr_base_rate", "kr_rp"];
   const us = ["us2y", "us10y"];
   const spreads = ["kr_term_spread", "kr_credit_spread", "kr_us10y_spread", "kr_cds"];
-  const conditions = ["kr_m2", "kr_rp", "kr_cpi", "kr_gdp", "dxy", "usd_broad"];
+  const conditions = ["kr_m2", "kr_cpi", "kr_gdp", "dxy", "usd_broad"];
   const known = (ids) => ids.filter((id) => state.dashboard.series[id]);
   return [
     chart(spec("macro-fx", "원화 환율", FX, { exclusive: true })),

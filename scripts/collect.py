@@ -33,6 +33,7 @@ ECOS_SERIES = {
     "kospi_turnover": ("802Y001", "0088000", 1),
     "kosdaq_turnover": ("802Y001", "0091000", 1),
     "kospi_marketcap": ("802Y001", "0183000", 1),
+    "kosdaq_marketcap_monthly": ("901Y014", "2040000", 100_000),
     "usdkrw": ("731Y001", "0000001", 1),
     "jpykrw100": ("731Y001", "0000002", 1),
     "eurkrw": ("731Y001", "0000003", 1),
@@ -42,6 +43,7 @@ ECOS_SERIES = {
     "kr10y": ("817Y002", "010210000", 1),
     "kr_cd91": ("817Y002", "010502000", 1),
     "kr_aa3y": ("817Y002", "010300000", 1),
+    "kr_rp": ("817Y002", "010901000", 1),
     "kr_m2": ("161Y006", "BBHA00", 1000),
     "kr_cpi": ("901Y009", "0", 1),
     "kr_gdp": ("200Y104", "1400", 1000),
@@ -152,6 +154,7 @@ def ecos_observations(client, key, token, start, end):
     rows = []
     accepted_units = {"kr_m2": "십억원", "kr_gdp": "십억원", "kr_cpi": "2020=100",
                       "kospi_per_monthly": "배", "kospi_dividend_monthly": "%",
+                      "kosdaq_marketcap_monthly": "천원",
                       "index_futures_volume_monthly": "계약",
                       "index_option_call_volume_monthly": "계약",
                       "index_option_put_volume_monthly": "계약"}

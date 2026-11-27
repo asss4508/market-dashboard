@@ -110,6 +110,17 @@ class DashboardTest(unittest.TestCase):
 
 
 class SourcesTest(unittest.TestCase):
+    def test_monthly_kosdaq_market_cap_converts_thousand_won_and_keeps_month_end(self):
+        client = Mock()
+        client.get.return_value = json.dumps({"StatisticSearch": {"list_total_count": 1, "row": [{
+            "STAT_CODE": "901Y014", "ITEM_CODE1": "2040000",
+            "UNIT_NAME": "천원", "TIME": "202610", "DATA_VALUE": "410400978909",
+        }]}}).encode()
+        points = ecos_observations(client, "kosdaq_marketcap_monthly", "mock",
+                                   date(2026, 10, 1), date(2026, 11, 27))
+        self.assertEqual(points, [("2026-10-31", 4104009.78909)])
+        self.assertTrue(client.get.call_args.args[1].endswith("/901Y014/M/202610/202611/2040000"))
+
     def test_monthly_investor_amounts_keep_their_own_frequency_and_history(self):
         client = Mock()
         client.get.return_value = json.dumps({"StatisticSearch": {"list_total_count": 1, "row": [{

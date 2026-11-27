@@ -41,6 +41,7 @@ class Indicator:
 ECOS = Source("한국은행 ECOS", "https://ecos.bok.or.kr/", "ECOS Open API", "한국은행 작성 통계 · 출처 표시")
 ECOS_MARKET = Source("한국은행 ECOS · 한국거래소", ECOS.url, ECOS.access, "ECOS 외부 작성 통계 · 출처 표시 및 비상업 이용")
 ECOS_BONDS = Source("한국은행 ECOS · 금융투자협회", ECOS.url, ECOS.access, "ECOS 외부 작성 통계 · 출처 표시 및 비상업 이용")
+ECOS_KOFR = Source("한국은행 ECOS · 한국예탁결제원", ECOS.url, ECOS.access, "ECOS 외부 작성 통계 · 출처 표시 및 비상업 이용")
 ECOS_CPI = Source("한국은행 ECOS · 국가데이터처", ECOS.url, ECOS.access, "ECOS 외부 작성 통계 · 출처 표시 및 비상업 이용")
 ECOS_FX = Source("한국은행 ECOS", ECOS.url, ECOS.access, "ECOS 환율 통계 · 출처 표시")
 KOFIA = Source("금융투자협회 · 금융위원회", "https://www.data.go.kr/data/15094809/openapi.do", "공공데이터포털 Open API", "이용허락범위 제한 없음")
@@ -62,7 +63,7 @@ NEEDS_UNIVERSE = "종목별 수정주가와 당시의 상장 종목 목록이 �
 POSITIVE_SERIES = {
     "kospi", "kosdaq", "kospi_ecos", "kosdaq_ecos", "kospi200", "kosdaq150",
     "usdkrw", "eurkrw", "jpykrw100", "cnykrw", "dxy", "usd_broad",
-    "kr_m2", "kr_cpi", "kr_gdp", "kospi_marketcap", "kosdaq_marketcap",
+    "kr_m2", "kr_cpi", "kr_gdp", "kospi_marketcap", "kosdaq_marketcap", "kosdaq_marketcap_monthly",
 }
 NONNEGATIVE_SERIES = {
     "deposit", "credit_kospi", "credit_kosdaq", "cma", "mmf", "forced_sales",
@@ -99,7 +100,7 @@ REGISTRY = {
     "kr_m2": Indicator("광의통화 M2", "유동성", "조원", "한국 통화량", "월별 평잔 원계열 광의통화(십억원을 조원으로 변환)", ECOS, "monthly", 65),
     "kr_cpi": Indicator("소비자물가", "실물 경제", "pt", "전국 소비자물가", "전국 소비자물가지수 총지수(2020=100)", ECOS_CPI, "monthly", 45),
     "kr_gdp": Indicator("실질 GDP", "실물 경제", "조원", "한국 국민계정", "2020년 연쇄가격 계절조정 실질 국내총생산", ECOS, "quarterly", 125),
-    "kr_rp": Indicator("RP 금리", "금리", "%", "한국 단기금융", "한국 환매조건부채권 거래금리", ECOS, limitation="대상 RP의 만기·거래 범위가 확인된 이력을 연결해야 합니다."),
+    "kr_rp": Indicator("KOFR · 익일물 RP 금리", "금리", "%", "국채·통안증권 담보 원화 익일물 장외 RP", "한국예탁결제원 산출 한국무위험지표금리(ECOS 817Y002)", ECOS_KOFR, limitation="기초 거래일을 관측일로 표시합니다. 익영업일 공시되며, ECOS 수록에 시차가 있을 수 있습니다."),
     "kr_cds": Indicator("한국 CDS", "금리", "bp", "한국 정부", "한국 5년 만기 신용부도스왑 프리미엄", Source("CDS 시세 제공사", "https://www.bok.or.kr/", "시장정보 제공사", "공개 재배포 허가 필요"), limitation=NEEDS_SOURCE),
     "deposit": Indicator("투자자예탁금", "증시 자금", "조원", "국내 증시", "장내파생상품 거래예수금을 제외한 투자자예탁금 잔액", KOFIA, expected_lag=7),
     "credit_kospi": Indicator("코스피 신용융자", "증시 자금", "조원", "코스피", "유가증권시장 신용거래융자 잔고", KOFIA, expected_lag=7),
@@ -122,6 +123,7 @@ REGISTRY = {
     "kospi_turnover": Indicator("코스피 거래대금", "투자자 수급", "억원", "코스피", "ECOS 유가증권시장 일별 주식 거래대금", ECOS_MARKET),
     "kosdaq_turnover": Indicator("코스닥 거래대금", "투자자 수급", "억원", "코스닥", "ECOS 코스닥시장 일별 주식 거래대금", ECOS_MARKET),
     "kospi_marketcap": Indicator("코스피 시가총액", "국내 지수", "억원", "코스피", "ECOS 유가증권시장 일별 시가총액", ECOS_MARKET),
+    "kosdaq_marketcap_monthly": Indicator("코스닥 시가총액 · 월", "국내 지수", "억원", "코스닥", "ECOS 901Y014 월별 코스닥 시가총액(천원을 억원으로 변환)", ECOS_MARKET, "monthly", 45),
     "kospi_per_monthly": Indicator("코스피 공표 PER · 월", "밸류에이션", "배", "코스피", "ECOS 주요금융통계의 월별 KOSPI 주가이익비율", ECOS_MARKET, "monthly", 45, "이익 산정의 상세 기준을 확보하지 않아 TTM·12M Forward PER로 분류하지 않습니다."),
     "kospi_dividend_monthly": Indicator("코스피 배당수익률 · 월", "밸류에이션", "%", "코스피", "ECOS 주요금융통계의 월별 KOSPI 배당수익률", ECOS_MARKET, "monthly", 45),
     "index_futures_volume_monthly": Indicator("주가지수선물 거래량 · 월", "선물옵션", "계약", "주가지수선물 합계", "ECOS 주가지수선물 거래의 월별 계약수", ECOS_MARKET, "monthly", 45, "월별 거래량이며 미결제약정·롤오버가 아닙니다. 상품별·만기별 구성은 제공되지 않습니다."),
@@ -132,7 +134,7 @@ REGISTRY = {
 
 
 for identifier, label, category, unit, scope, definition, limitation in (
-    ("kosdaq_marketcap", "코스닥 시가총액", "국내 지수", "억원", "코스닥", "코스닥시장 일별 시가총액", NEEDS_SOURCE),
+    ("kosdaq_marketcap", "코스닥 시가총액 · 일별", "국내 지수", "억원", "코스닥", "코스닥시장 일별 시가총액", "일별 시가총액을 공개 제공할 수 있는 원천이 필요합니다. ECOS 월별 시총은 별도 계열로 제공합니다."),
     ("advancers", "상승 종목수", "시장 폭", "개", "국내 상장 보통주", "직전 거래일 대비 상승 종목수", NEEDS_UNIVERSE),
     ("decliners", "하락 종목수", "시장 폭", "개", "국내 상장 보통주", "직전 거래일 대비 하락 종목수", NEEDS_UNIVERSE),
     ("new_high52", "52주 신고가 종목수", "시장 폭", "개", "국내 상장 보통주", "52주 신고가를 기록한 종목수", NEEDS_UNIVERSE),
